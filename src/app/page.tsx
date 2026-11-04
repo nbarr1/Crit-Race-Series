@@ -70,7 +70,8 @@ export default function HomePage() {
         <h1 className="text-3xl font-bold">{SERIES_NAME}</h1>
         <p className="text-lg">Criterium racing at Connestee Nature Park. Four fields: A, B, Open Women, and Masters.</p>
       </section>
-      <Suspense fallback={<PageLoading label="Loading the next race" />}>
+      {/* The fallback holds the card's space, so the links below don't jump when it streams in. */}
+      <Suspense fallback={<div className="min-h-72"><PageLoading label="Loading the next race" /></div>}>
         <NextRace />
       </Suspense>
       <nav aria-label="Series" className="flex flex-wrap gap-x-4 font-semibold">

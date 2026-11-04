@@ -4,7 +4,7 @@ This file records every assumption and trade-off made while building the app. Ea
 
 ## Organizer settings (section 8 of the build prompt)
 
-These decisions belong to the organizers. Each one is a row in the `app_settings` table (seeded by `supabase/migrations/20261104000400_defaults.sql`) or a column an admin edits, so they can change without code changes. The admin settings screen arrives in phase 6. Until then, edit them in the Supabase table editor.
+These decisions belong to the organizers. Each one is a row in the `app_settings` table (seeded by `supabase/migrations/20261104000400_defaults.sql`) or a column an admin edits, so they can change without code changes. Admins change them on the admin screens (phase 6): settings under **Admin > Settings**, prices and capacities on each event under **Admin > Events and prices**, the season pass price under **Admin > Seasons**, the Masters age under **Admin > Categories**, points under **Admin > Points**, and the venue under **Admin > Venue**.
 
 | Decision | Default | Where it lives |
 |---|---|---|
@@ -157,7 +157,7 @@ USA Cycling integration point: if the series is sanctioned, the sanctioning body
 
 **D-073. Some actions need a connection.** Walk-up registration, undoing a check-in, rider search, and start lists need a signal. Walk-ups create a rider on the server, and undo must not race with queued check-ins. Everything else works offline.
 
-**D-074. The cached roster leaves out the most sensitive fields.** The roster saved on staff devices has names, team, category, bib, and status. Emergency contacts, email addresses, and phone numbers are left out, and birth dates are reduced to an under-18 flag. A lost phone then exposes as little as possible. Staff can still read emergency contacts online through the database, and an emergency contact sheet is planned for phase 6.
+**D-074. The cached roster leaves out the most sensitive fields.** The roster saved on staff devices has names, team, category, bib, and status. Emergency contacts, email addresses, and phone numbers are left out, and birth dates are reduced to an under-18 flag. A lost phone then exposes as little as possible. Staff read emergency contacts online, on the emergency contact sheet for each event (added in phase 6, D-117).
 
 **D-075. Offline waivers keep the device's time.** A waiver signed on a staff device records the device's signing time, the staff device's user agent (from the sync request), and the collecting staff member. The IP address is left empty, because the address that later syncs the queue says nothing about where the rider signed. The rider types their name to match their profile, and minors need a guardian, as online.
 
@@ -225,6 +225,36 @@ The build prompt for this phase wasn't available in the session that built it, s
 
 **D-108. The standings page renders per request.** Its data is cached and shared under the `results` tag, and publishing invalidates it. A prerendered page would serve one stale copy after each publish, so the page reads the cache at request time instead (the end-to-end test caught this).
 
+## Phase 6: admin and polish
+
+The build prompt wasn't available in the session that built this phase either. The scope comes from the README's phase table ("dashboard, CRUD screens, exports, accessibility and Lighthouse passes") and the earlier entries that pointed here: the settings screen, staff management (README), the emergency contact sheet (D-074), and the Lighthouse check on images (D-099). Each choice is worth confirming with the organizers.
+
+**D-110. Admin writes go through database functions.** Each admin screen saves through one function in `20261109000100_admin.sql` (`admin_save_event`, `admin_save_season`, and so on). An event and its categories, or switching the active season, then change in one transaction, and the app gets short error codes (such as `category_in_use`) it turns into sentences. The functions run with the caller's rights (`security invoker`), so row-level security still applies and the audit log records the admin as the actor (D-024). Each one starts with `require_admin()`, which raises `admin_only` for anyone else. The server actions check the role too, and validate input with Zod before calling the database.
+
+**D-111. Admins work in Eastern Time.** Start times and registration windows are entered as wall-clock times in America/New_York, and converted to UTC on the server (`easternLocalToUtc` in `src/lib/time.ts`, unit-tested across both clock changes). A category's start time is a time on the event date, since a race doesn't run past midnight.
+
+**D-112. Prices are typed in dollars.** "25", "25.50", and "$25" all work, and are stored as cents. Use 0 for a free race.
+
+**D-113. A category riders have registered for stays on the event.** Removing a category from an event deletes its row, which would orphan registrations (canceled ones included) and results, so the database refuses with `category_in_use`. Changing such a row to a different category is refused for the same reason. To stop new entries, set the capacity to 0. Lowering a capacity below the number already registered is allowed and doesn't remove anyone.
+
+**D-114. Events are canceled, not deleted, once riders have registered.** Deleting is a soft delete (`deleted_at`) and is only allowed for an event with no active registrations and no results. Canceling keeps the registrations, shows the event as canceled, and leaves refunds to staff, matching the default refund policy.
+
+**D-115. New events start from the season's latest event.** The new-event form copies the latest event's categories, start times, lengths, capacities, and prices, so a weekly series is set up by adding one event and copying it. Without an earlier event, it lists every category with the default capacity and prices from the settings. "Copy to another date" creates a draft with the same details. Start times and the registration window keep the same Eastern clock times, so a copy across a clock change still starts at 5:15 PM. New and copied events are drafts until an admin publishes them. Publishing still registers season pass holders (phase 2 trigger).
+
+**D-116. One season is active at a time.** Making a season active turns the previous one off in the same transaction. The schedule, registration, standings, and the waivers screen follow the active season. A new season gets the first points table unless one is chosen, and its season pass price defaults to the `season_pass_price_cents` setting. A season with no pass price doesn't sell passes.
+
+**D-117. The emergency contact sheet is a staff page, read online.** `/staff/events/<id>/emergency` lists each rider registered for the event once (confirmed or awaiting payment), with their phone, emergency contact, and an under-18 note, sorted by last name, with a print button and print styles that hide the site header. It's never cached by the service worker, which only stores the check-in screen (D-074). The registrations CSV, which also has email addresses and birth dates, is for admins only.
+
+**D-118. Exports are CSV, read a page at a time.** The registrations export works for one event or a whole season and reads 1,000 rows at a time, since Supabase caps each response. Spreadsheet formula characters are escaped (phase 2 `csvCell`).
+
+**D-119. Settings are edited generically.** The settings screen lists every row of `app_settings`, and picks the input from the key and the stored value (a checkbox for true or false, dollars for `_cents`, a link for `_url`, a list for the refund policy). The database refuses unknown keys and a change of type, so a typo can't create a setting nothing reads. `reminder_hours_before` isn't used by any code yet (no reminder email exists), and its description says so.
+
+**D-120. Roles are set on the Staff and admins screen.** It lists staff and admins, and finds anyone by name or email. Role changes still go through `admin_set_role()` (D-020), so an admin can't remove their own admin role. The first admin still has to be set with SQL, since nobody can grant a role before an admin exists.
+
+**D-121. The activity log shows the last 100 changes.** It reads `audit_log` (admins only, D-024) with the actor's name, the kind of row, and which fields changed. It doesn't show the values, which can include private details such as emergency contacts.
+
+**D-122. Accessibility is checked automatically.** The data-backed end-to-end tests run axe-core against the admin dashboard, the event list and form, settings, staff and admins, the emergency contact sheet, and the main public pages, and fail on any WCAG 2.1 A or AA violation. Automated checks find a share of problems, not all of them. A pass with a screen reader (VoiceOver on iOS and TalkBack on Android) is still worth doing before launch.
+
 ## Open questions for the organizers
 
 These don't block the build, but the answers change settings or copy:
@@ -238,5 +268,7 @@ These don't block the build, but the answers change settings or copy:
 7. Whether to sell a season pass, and its price per category.
 8. Bib numbers: whether riders keep one bib all season (the seed data does), and the starting number (the app suggests from 101).
 9. A contact email for the National Weather Service User-Agent, to turn on weather alerts.
+10. Whether staff should see the emergency contact sheet, or only admins and a named first-aid lead (D-117).
+11. Whether to send the race-day reminder email that `reminder_hours_before` describes (D-119).
 10. Sponsor tiers and logos.
 11. Points: the number of dropped races (default none), the tiebreak rule (D-102), and whether unregistered riders in a results sheet should score.

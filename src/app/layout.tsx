@@ -28,7 +28,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         >
           Skip to main content
         </a>
-        <header className="border-b-2 border-border bg-primary text-primary-foreground">
+        <header className="print:hidden border-b-2 border-border bg-primary text-primary-foreground">
           <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-2 px-4 py-2">
             <Link href="/" className="flex min-h-11 items-center text-lg font-bold">
               {SERIES_NAME}
@@ -52,10 +52,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             </nav>
           </div>
         </header>
-        <main id="main" className="mx-auto max-w-3xl px-4 py-6">
+        <main id="main" className="mx-auto min-h-dvh max-w-3xl px-4 py-6">
           {children}
         </main>
-        <footer className="mx-auto max-w-3xl px-4 pb-8 pt-4 text-sm text-muted-foreground">
+        <footer className="print:hidden mx-auto max-w-3xl px-4 pb-8 pt-4 text-sm text-muted-foreground">
           <nav aria-label="Footer" className="mb-2 flex flex-wrap gap-x-4">
             <Link href="/announcements" className="inline-flex min-h-11 items-center underline">Announcements</Link>
             <Link href="/sponsors" className="inline-flex min-h-11 items-center underline">Sponsors</Link>
