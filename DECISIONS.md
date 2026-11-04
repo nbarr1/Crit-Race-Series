@@ -143,7 +143,7 @@ USA Cycling integration point: if the series is sanctioned, the sanctioning body
 
 ### Operations
 
-**D-067. A scheduled job runs every 15 minutes.** `vercel.json` schedules `/api/cron/registrations`, which Vercel calls with `CRON_SECRET`. Vercel's Hobby plan runs cron jobs at most once a day, so a 15-minute schedule needs a paid plan. On Hobby, expired holds are still released whenever someone registers for that category, but promotion emails and PDF retries wait for the daily run. A free alternative is to call the URL from another scheduler with the same bearer token.
+**D-067. A scheduled job runs once a day.** `vercel.json` schedules `/api/cron/registrations` at 11:00 UTC, which Vercel calls with `CRON_SECRET`. Vercel's Hobby plan runs cron jobs at most once a day, so the schedule started at every 15 minutes and changed to daily in phase 5. The morning run lands before race-day registration closes. Most work doesn't wait for it: expired holds are also released whenever someone registers for that category, promotions after a cancellation email right away, and announcements posted for now email right away. What waits up to a day: promotion emails after an expired payment hold, emails for scheduled announcements, and retries of waiver PDFs and emails that failed (each run retries up to 25 signatures from the last three days). For a shorter delay, move to a paid Vercel plan and set a schedule such as `*/15 * * * *`, or call the URL from another scheduler with the same bearer token.
 
 ## Phase 3: race-day check-in
 
