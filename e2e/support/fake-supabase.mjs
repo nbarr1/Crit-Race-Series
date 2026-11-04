@@ -7,7 +7,7 @@
  *
  * It implements only what the app's read paths and RPC calls use:
  *   GET  /auth/v1/user                 (trusts the JWT's sub claim, no signature check)
- *   GET  /rest/v1/<table>?select=...   (columns, one-level-or-deeper embeds, eq/neq/is/in/lt/lte/gt/gte, order, limit)
+ *   GET  /rest/v1/<table>?select=...   (columns, one-level-or-deeper embeds, eq/neq/is/in/lt/lte/gt/gte, order, limit, offset)
  *   POST /rest/v1/rpc/<function>       (named arguments)
  * Each query runs as the `authenticated` (or `anon`) role with the JWT claims
  * set, exactly as PostgREST does. Never point a real app at this.
@@ -230,15 +230,17 @@ const server = http.createServer(async (req, res) => {
         const where = [];
         let order = "";
         let limit = "";
+        let offset = "";
         for (const [k, v] of url.searchParams) {
           if (k === "select") continue;
           if (k === "order") {
             order = ` order by ${v.split(",").map((o) => { const [c, dir] = o.split("."); return `${alias}.${ident(c)} ${dir === "desc" ? "desc" : "asc"}`; }).join(", ")}`;
           } else if (k === "limit") limit = ` limit ${Number(v)}`;
+          else if (k === "offset") offset = ` offset ${Number(v)}`;
           else where.push(filterSql(alias, k, v, params));
         }
         const selectSql = cols.map((c) => (c.name === "*" ? c.expr : `${c.expr} as "${c.name}"`)).join(", ");
-        const sql = `select ${selectSql} from public.${ident(table[1])} ${alias}${where.length ? ` where ${where.join(" and ")}` : ""}${order}${limit}`;
+        const sql = `select ${selectSql} from public.${ident(table[1])} ${alias}${where.length ? ` where ${where.join(" and ")}` : ""}${order}${limit}${offset}`;
         return (await client.query(sql, params)).rows;
       });
       if (wantsObject) {

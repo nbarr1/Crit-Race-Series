@@ -16,7 +16,7 @@ These decisions belong to the organizers. Each one is a row in the `app_settings
 | Masters minimum age | 40, warning only | `categories.min_age` on the Masters category (D-063) |
 | Riders under 18 allowed | Yes, with guardian signature | `app_settings.minors_allowed` |
 | Category capacity | 60 per category | `event_categories.capacity`, `app_settings.default_category_capacity` |
-| Points table and dropped races | Section 5.6 table, no dropped races | `points_rules` |
+| Points table and dropped races | Section 5.6 table, no dropped races | `points_rules` (editing the table rescores results, D-107) |
 | Venue coordinates and address | Placeholder. Admin must confirm. | `venues` (`coordinates_confirmed = false` until confirmed) |
 
 USA Cycling integration point: if the series is sanctioned, the sanctioning body may have its own registration and waiver requirements. The app leaves room for them without assuming what they are: `app_settings.external_waiver_url` and `waiver_versions.external_waiver_url` hold an optional external waiver link, and `profiles.usac_license_number` and `usac_license_expiry` hold license details. No license verification API is called.
@@ -203,6 +203,28 @@ USA Cycling integration point: if the series is sanctioned, the sanctioning body
 
 **D-099. Images are plain `<img>` tags.** Course maps and sponsor logos come from storage at sizes that aren't known ahead of time. They load lazily below the fold, and the map links to its full-size file. Next.js image optimization would need the storage host configured at build time. It's worth revisiting if the Lighthouse pass in phase 6 flags these images.
 
+## Phase 5: results and standings
+
+The build prompt for this phase wasn't available in the session that built it, so the rules here come from the existing schema (`points_rules.drop_worst_n`, the `most_wins_then_most_recent_best` tiebreaker, and the `standings` view), the default settings table, and common practice in US criterium series. Each one is worth confirming with the organizers.
+
+**D-100. The database computes points; the app ranks.** Points per result are computed in Postgres from the season's points table when results are saved and again when they're published, so the browser never supplies a points value. Ranking (drops and tiebreakers) is in `src/lib/points.ts`, which is unit-tested. The `standings` view applies the same drop rule, and the SQL tests check its totals.
+
+**D-101. Dropped races: each rider's best E minus N results count, and at least one.** E is the number of events in the category with published results so far, and N is `drop_worst_n` (default 0). A missed race has no result, so it counts as one of the drops first. Among equal scores, the oldest is dropped. Early in the season, when E is no more than N, each rider's single best result counts, so the table never reads all zeros. This changes the phase 1 view, which summed nothing in that case.
+
+**D-102. Tiebreakers: more wins, then the better place in the most recent race.** For riders level on points, the one with more wins ranks higher. If still level, the most recent event where their places differ decides it, walking back one event at a time. A finish beats a DNF, DNS, DQ, or no start. Riders still level after every event share a rank, shown as "T3." Only a finished first place counts as a win.
+
+**D-103. DNF, DNS, and DQ score zero, and have no place.** A place on a DNF row in the sheet is ignored. Places past the end of the points table score zero.
+
+**D-104. The results sheet is a CSV with a header row.** Comma, tab, or semicolon separated, as timing software and spreadsheets export it. The parser recognizes common column names: Place (or Pos, Position, Rank), Bib (or Number, No), Name (or Rider), or First and Last, plus optional Team, Status, Laps, and Time. DNF, DNS, DQ, and DSQ can be in the Place or Status column, and OTL (over the time limit) is read as DNF. Duplicate places or bibs block the save. A gap in the places is a warning only. Files are limited to 512 KB and 500 rows, one category per upload. Team names from the sheet aren't stored. Riders' teams come from their profiles.
+
+**D-105. Riders are matched by bib, then by name, and staff confirm each match.** Bibs are unique per event (D-012), so a bib match is trusted, with a note if the sheet's name differs or the rider is registered in another category. Without a bib match, the name is compared after removing accents, case, and punctuation, in "First Last," "Last, First," or display-name form, preferring riders registered in the category being scored. Two riders with the same name are left for staff to choose. Only confirmed registrations at that event are candidates. A rider can have one result per category, enforced by a unique index.
+
+**D-106. Unmatched rows are kept but don't score in the standings.** A result with no matched rider shows in the event's results under the name from the sheet (officials post these names publicly anyway), but it can't count toward a rider's series total. Staff can match it later by uploading again.
+
+**D-107. Saving replaces a category's results as a draft; publishing is a separate step.** Saving deletes the category's earlier rows and inserts the new ones unpublished, in one transaction, so a correction takes the race off the public pages until staff publish again. Publishing recomputes points from the current table. When an admin edits a points table, a trigger rescores every result in the seasons that use it. Every write goes through the audit log with the staff member as the actor (D-024).
+
+**D-108. The standings page renders per request.** Its data is cached and shared under the `results` tag, and publishing invalidates it. A prerendered page would serve one stale copy after each publish, so the page reads the cache at request time instead (the end-to-end test caught this).
+
 ## Open questions for the organizers
 
 These don't block the build, but the answers change settings or copy:
@@ -217,3 +239,4 @@ These don't block the build, but the answers change settings or copy:
 8. Bib numbers: whether riders keep one bib all season (the seed data does), and the starting number (the app suggests from 101).
 9. A contact email for the National Weather Service User-Agent, to turn on weather alerts.
 10. Sponsor tiers and logos.
+11. Points: the number of dropped races (default none), the tiebreak rule (D-102), and whether unregistered riders in a results sheet should score.

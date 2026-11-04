@@ -70,7 +70,14 @@ To take an announcement down, tap **Remove** next to it.
 
 ## Posting results
 
-Results upload isn't in the app yet. Give the officials' result sheets to the organizers.
+1. Get the officials' results as a CSV file, one category at a time. A spreadsheet works too: copy the rows, including the header row.
+2. Open **Staff**, then **Results**, and pick the race and category.
+3. Choose the file, or paste the rows, and tap **Preview results**. If the sheet has a problem, such as two riders in the same place, the app lists the lines to fix.
+4. Check each match. Riders are matched by bib, then by name. Fix any wrong match with the menu under the row. Riders who aren't registered stay "Not matched": they show in the race results but don't score series points.
+5. Tap **Save results as a draft**. Nothing is public yet.
+6. Check the saved list and the points, then tap **Publish results**. The results appear on the event page, and the standings update.
+
+To correct published results, upload the fixed sheet. Saving takes the race off the public pages until you publish again. **Unpublish results** hides a race without changing it.
 
 ## Who to call
 

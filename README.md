@@ -10,7 +10,7 @@ The app is built in six phases (see the build prompt). This README describes wha
 | 2. Registration and waivers | Registration flow, waiver signing and PDFs, Stripe, waitlist, email | Done |
 | 3. Check-in | Staff roster, QR scanning, walk-ups, offline queue, start lists | Done |
 | 4. Event information | Home page, weather, announcements, sponsors, calendar files | Done |
-| 5. Results and standings | CSV upload and matching, publishing, points engine | Not started |
+| 5. Results and standings | CSV upload and matching, publishing, points engine, standings | Done |
 | 6. Admin and polish | Dashboard, CRUD screens, exports, accessibility and Lighthouse passes | Not started |
 
 For every assumption and trade-off, see [DECISIONS.md](DECISIONS.md).
@@ -182,6 +182,8 @@ The tests cover, among other things:
 - Staff can check riders in and edit profiles, and those writes land in the audit log with before and after values.
 - Waiver signatures and the audit log are append-only. Published waiver text can't be edited.
 
+The results tests (`supabase/tests/results.test.sql`) cover who can save and publish, points from the season's table, DNF scoring, duplicate places and riders, drafts staying private, dropped races in the standings view, and rescoring when the points table changes.
+
 The registration tests (`supabase/tests/registration.test.sql`) cover the waiver requirement, the registration window, payment holds and their expiry, capacity and the waitlist, cancellation and promotion, eligibility warnings, payments off, minors, season passes, Stripe confirmation idempotency, and new waiver versions.
 
 ### End-to-end tests
@@ -193,6 +195,8 @@ The Playwright tests need no database. They check the public shell, sign-in form
 `npm run test:e2e:data` builds a fresh database with the migrations and seed data (`scripts/e2e-db.sh`) and puts "Race 4" on today's date. It then builds and runs the real app against that database. The database is created before the build, because public pages prerender their cached data (announcements, sponsors) at build time. Because the Supabase stack isn't available in every environment, the app talks to `e2e/support/fake-supabase.mjs`. This test-only server answers the app's auth and REST calls by running them against the local database as the signed-in user, with row-level security applied. Never point a real deployment at it (DECISIONS.md D-082).
 
 The event information tests check the event page's weather panel, the home page banner and sponsor strip, the announcements and sponsors pages, and the calendar files. Their weather comes from a stand-in for Open-Meteo in the same test server (same response shape, made-up values), so they test the app's request, parsing, and display, not the live service.
+
+The results tests sign in as staff, paste a results sheet for "Race 4" (names only, one written "Last, First," plus an unregistered rider), check the matches, save a draft, confirm it isn't public, publish it, and check the event page and the standings.
 
 The offline test covers the phase 3 acceptance criterion. With the network turned off, a staff member checks in 20 seeded riders and reloads the page, which reopens from the service worker with all 20 changes still queued. When the network comes back, the test checks that all 20 reached the database with distinct bibs and their offline check-in times.
 
@@ -238,3 +242,9 @@ update public.profiles set role = 'staff' where email = 'volunteer@example.com';
 ```
 
 The staff management screen is planned for phase 6.
+
+## Results and standings
+
+Staff upload results at **Staff > Results** (`/staff/results`): pick a race and category, upload or paste the officials' CSV, check how each row matched a registered rider, save it as a draft, and publish. Published results appear on the event page, and `/standings` ranks riders in each category. For the steps, see [STAFF_GUIDE.md](STAFF_GUIDE.md). For the CSV columns, matching, points, dropped races, and tiebreakers, see DECISIONS.md D-100 to D-108.
+
+The points table and the number of dropped races live in the `points_rules` table. Editing the table rescores every result in the seasons that use it.
