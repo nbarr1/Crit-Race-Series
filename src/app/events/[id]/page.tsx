@@ -12,6 +12,8 @@ import { buttonVariants } from "@/components/ui/button";
 import { WeatherPanel } from "@/components/event/weather-panel";
 import { CourseMap } from "@/components/event/course-map";
 import { AnnouncementList } from "@/components/event/announcement-list";
+import { EventResults } from "@/components/event/event-results";
+import { getEventResults } from "@/lib/results-data";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -35,7 +37,10 @@ async function EventDetailView({ params }: Props) {
     ? `https://www.google.com/maps/dir/?api=1&destination=${venue.latitude},${venue.longitude}`
     : null;
   const window = raceWindow(event.event_categories);
-  const announcements = await getAnnouncements({ eventId: event.id, limit: 10 });
+  const [announcements, results] = await Promise.all([
+    getAnnouncements({ eventId: event.id, limit: 10 }),
+    getEventResults(event.id),
+  ]);
 
   return (
     <article className="space-y-6">
@@ -62,6 +67,9 @@ async function EventDetailView({ params }: Props) {
           ) : null
         ) : null}
         <nav aria-label="On this page" className="flex flex-wrap gap-x-4 text-base font-semibold">
+          {results.length ? (
+            <a href="#results-heading" className="inline-flex min-h-11 items-center text-primary underline">Results</a>
+          ) : null}
           <a href="#weather-heading" className="inline-flex min-h-11 items-center text-primary underline">Weather</a>
           {event.course_map || event.gpx.length ? (
             <a href="#course-map" className="inline-flex min-h-11 items-center text-primary underline">Course map</a>
@@ -79,6 +87,8 @@ async function EventDetailView({ params }: Props) {
           <AnnouncementList items={announcements} />
         </section>
       ) : null}
+
+      <EventResults categories={results} />
 
       <section aria-labelledby="categories-heading" className="space-y-3">
         <h2 id="categories-heading" className="text-2xl font-bold">

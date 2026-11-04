@@ -16,8 +16,11 @@ async function StaffHome() {
       <Link href="/staff/check-in" className={buttonVariants({ size: "lg" })}>
         Open race-day check-in
       </Link>
-      <p className="text-sm text-muted-foreground">Check-in works offline once you&apos;ve opened it with a signal. Results upload arrives in a later build phase.</p>
+      <p className="text-sm text-muted-foreground">Check-in works offline once you&apos;ve opened it with a signal.</p>
       <ul className="list-disc space-y-1 pl-5">
+        <li>
+          <Link href="/staff/results" className="font-semibold text-primary underline">Results: upload, check, and publish</Link>
+        </li>
         <li>
           <Link href="/staff/announcements" className="font-semibold text-primary underline">Announcements: post and email riders</Link>
         </li>

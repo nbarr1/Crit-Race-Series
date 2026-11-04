@@ -19,7 +19,13 @@ test("sign-in form is labeled and validates email", async ({ page }) => {
   await expect(page.getByText("Enter a valid email address.")).toBeVisible();
 });
 
-for (const path of ["/my-races", "/register", "/waiver", "/season-pass"]) {
+test("the standings page renders without a database", async ({ page }) => {
+  await page.goto("/standings");
+  await expect(page.getByRole("heading", { name: "Series standings" })).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: "Standings" })).toBeVisible();
+});
+
+for (const path of ["/my-races", "/register", "/waiver", "/season-pass", "/staff/results"]) {
   test(`${path} sends signed-out visitors to sign in`, async ({ page }) => {
     await page.goto(path);
     await expect(page).toHaveURL(new RegExp(`/sign-in\\?next=${encodeURIComponent(path)}`));

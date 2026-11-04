@@ -40,6 +40,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
                     Schedule
                   </Link>
                 </li>
+                <li>
+                  <Link className="flex min-h-11 items-center rounded px-2 hover:underline" href="/standings">
+                    Standings
+                  </Link>
+                </li>
                 <Suspense fallback={<SignInLink />}>
                   <AccountNav />
                 </Suspense>
@@ -55,6 +60,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             <Link href="/announcements" className="inline-flex min-h-11 items-center underline">Announcements</Link>
             <Link href="/sponsors" className="inline-flex min-h-11 items-center underline">Sponsors</Link>
             <Link href="/schedule" className="inline-flex min-h-11 items-center underline">Schedule</Link>
+            <Link href="/standings" className="inline-flex min-h-11 items-center underline">Standings</Link>
           </nav>
           <p>Times shown in Eastern Time.</p>
         </footer>
