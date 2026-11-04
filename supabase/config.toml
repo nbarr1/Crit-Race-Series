@@ -36,7 +36,7 @@ email_sent = 30
 token_verifications = 30
 
 [auth.email.template.magic_link]
-subject = "Your sign-in code for the Connestee Crit Series"
+subject = "Your sign-in code for the Conestee Crit Series"
 content_path = "./supabase/templates/magic_link.html"
 
 [storage]

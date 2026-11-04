@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: SERIES_NAME,
     short_name: "Crit Series",
-    description: "Schedule, registration, check-in, and results for the Connestee Crit Series.",
+    description: "Schedule, registration, check-in, and results for the Conestee Crit Series.",
     start_url: "/",
     display: "standalone",
     background_color: "#ffffff",

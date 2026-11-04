@@ -20,8 +20,8 @@ describe("smtpSettings", () => {
   });
 
   it("uses EMAIL_FROM and a custom host when set", () => {
-    const s = smtpSettings({ ...gmail, EMAIL_FROM: "Connestee Crit Series <series@gmail.com>", SMTP_HOST: "smtp.example.org", SMTP_PORT: "587" });
-    expect(s).toMatchObject({ host: "smtp.example.org", port: 587, from: "Connestee Crit Series <series@gmail.com>" });
+    const s = smtpSettings({ ...gmail, EMAIL_FROM: "Conestee Crit Series <series@gmail.com>", SMTP_HOST: "smtp.example.org", SMTP_PORT: "587" });
+    expect(s).toMatchObject({ host: "smtp.example.org", port: 587, from: "Conestee Crit Series <series@gmail.com>" });
   });
 
   it("is null without a user or password", () => {

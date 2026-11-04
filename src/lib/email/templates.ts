@@ -118,7 +118,7 @@ export function announcementEmail(firstName: string, title: string, bodyText: st
   return {
     subject,
     html: layout(title, `<p>Hi ${esc(firstName)},</p>${paragraphs}<p><a href="${esc(url)}">Read it on the series site</a></p>
-<p style="color:#475569;font-size:13px">You're getting this because you're registered for the Connestee Crit Series.</p>`),
-    text: `Hi ${firstName},\n\n${bodyText}\n\nRead it on the series site: ${url}\n\nYou're getting this because you're registered for the Connestee Crit Series.\n`,
+<p style="color:#475569;font-size:13px">You're getting this because you're registered for the Conestee Crit Series.</p>`),
+    text: `Hi ${firstName},\n\n${bodyText}\n\nRead it on the series site: ${url}\n\nYou're getting this because you're registered for the Conestee Crit Series.\n`,
   };
 }

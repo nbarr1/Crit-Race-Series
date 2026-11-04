@@ -52,7 +52,7 @@ test("calendar downloads cover the season and single events", async ({ request }
   expect(season.headers()["content-type"]).toContain("text/calendar");
   const body = await season.text();
   expect(body.match(/BEGIN:VEVENT/g)).toHaveLength(10);
-  expect(body).toContain("SUMMARY:Race 1\\, Connestee Crit Series");
+  expect(body).toContain("SUMMARY:Race 1\\, Conestee Crit Series");
 
   const { rows: [event] } = await db.query("select id from public.events where name = 'Race 2'");
   const one = await (await request.get(`/events/${event.id}/calendar.ics`)).text();

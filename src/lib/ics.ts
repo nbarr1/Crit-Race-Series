@@ -47,7 +47,7 @@ export function buildCalendar(name: string, events: CalendarEvent[], now = new D
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Connestee Crit Series//Schedule//EN",
+    "PRODID:-//Conestee Crit Series//Schedule//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     `X-WR-CALNAME:${escapeText(name)}`,

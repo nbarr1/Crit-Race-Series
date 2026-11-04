@@ -48,7 +48,7 @@ test("staff can't open the admin screens", async ({ page, context, baseURL }) =>
 test("an admin sees the season dashboard", async ({ page, context, baseURL }) => {
   await signInAs(context, await user("admin"), baseURL!);
   await page.goto("/admin");
-  await expect(page.getByRole("heading", { name: "2027 Connestee Crit Series" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "2027 Conestee Crit Series" })).toBeVisible();
   const { rows: [{ n }] } = await db.query(
     `select count(distinct r.rider_id)::int as n from public.registrations r join public.events e on e.id = r.event_id
      join public.seasons s on s.id = e.season_id where s.is_active and r.status in ('confirmed', 'pending_payment')`,
@@ -62,7 +62,7 @@ test("an admin sees the season dashboard", async ({ page, context, baseURL }) =>
 test("an admin creates, publishes, and copies an event, with prices", async ({ page, context, baseURL }) => {
   await signInAs(context, await user("admin"), baseURL!);
   await page.goto("/admin/events");
-  await expect(page.getByRole("heading", { name: /2027 Connestee Crit Series/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /2027 Conestee Crit Series/ })).toBeVisible();
   await expectAccessible(page);
   await page.getByRole("link", { name: "Add an event" }).click();
   await expect(page.getByRole("heading", { name: "Add an event" })).toBeVisible();

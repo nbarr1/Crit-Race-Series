@@ -1,1 +1,1 @@
-export const SERIES_NAME = "Connestee Crit Series";
+export const SERIES_NAME = "Conestee Crit Series";

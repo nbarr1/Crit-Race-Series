@@ -1,5 +1,5 @@
 /*
- * Service worker for the Connestee Crit Series app.
+ * Service worker for the Conestee Crit Series app.
  *
  * Its one job is to make the staff check-in screen open without a signal:
  * - Visits to /staff/check-in are network-first, with the last good copy kept

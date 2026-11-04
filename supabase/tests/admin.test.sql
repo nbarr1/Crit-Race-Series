@@ -45,8 +45,8 @@ select tests.ok((select not is_active from public.seasons where id = pg_temp.v('
 select tests.throws_like($$select public.admin_save_season(null, 'X', 2028, null, null)$$, 'name_required', 'a season needs a name');
 select tests.throws_like($$select public.admin_save_season(null, 'Bad year', 1800, null, null)$$, 'year_invalid', 'a season year must be sensible');
 select tests.throws_like($$select public.admin_save_season(null, 'Bad price', 2028, -1, null)$$, 'price_invalid', 'a season pass price cannot be negative');
-do $$ begin perform public.admin_save_season(pg_temp.v('s1'), '2028 Connestee Series', 2028, 15000, pg_temp.v('rules')); end $$;
-select tests.ok((select name = '2028 Connestee Series' and season_pass_price_cents = 15000 from public.seasons where id = pg_temp.v('s1')), 'an admin edits a season');
+do $$ begin perform public.admin_save_season(pg_temp.v('s1'), '2028 Conestee Series', 2028, 15000, pg_temp.v('rules')); end $$;
+select tests.ok((select name = '2028 Conestee Series' and season_pass_price_cents = 15000 from public.seasons where id = pg_temp.v('s1')), 'an admin edits a season');
 
 insert into f values ('s0', (select id from public.seasons where is_active));
 do $$ begin perform public.admin_activate_season(pg_temp.v('s1')); end $$;
@@ -157,7 +157,7 @@ select tests.ok((select points_awarded from public.results where rider_id = pg_t
 select tests.ok((select drop_worst_n from public.points_rules where id = pg_temp.v('rules')) = 1, 'an admin sets dropped races');
 
 -- Venues
-do $$ begin perform public.admin_save_venue(pg_temp.v('venue'), 'Connestee Nature Park', '1 Park Rd', 35.2, -82.7, true, 'Park on the grass.', null); end $$;
+do $$ begin perform public.admin_save_venue(pg_temp.v('venue'), 'Conestee Nature Park', '1 Park Rd', 35.2, -82.7, true, 'Park on the grass.', null); end $$;
 select tests.ok((select coordinates_confirmed and address = '1 Park Rd' from public.venues where id = pg_temp.v('venue')), 'an admin confirms the venue');
 select tests.throws_like($$select public.admin_save_venue(null, 'Nowhere', '', 95, 0, false, '', null)$$, 'coordinates_invalid', 'latitude must be on Earth');
 select tests.throws_like($$select public.admin_save_venue(null, 'Somewhere', '', 35, -82, false, '', 'javascript:alert(1)')$$, 'url_invalid', 'map links must be https');

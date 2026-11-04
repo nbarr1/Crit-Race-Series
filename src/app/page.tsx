@@ -68,7 +68,7 @@ export default function HomePage() {
       </Suspense>
       <section className="space-y-2">
         <h1 className="text-3xl font-bold">{SERIES_NAME}</h1>
-        <p className="text-lg">Criterium racing at Connestee Nature Park. Four fields: A, B, Open Women, and Masters.</p>
+        <p className="text-lg">Criterium racing at Conestee Nature Park. Four fields: A, B, Open Women, and Masters.</p>
       </section>
       {/* The fallback holds the card's space, so the links below don't jump when it streams in. */}
       <Suspense fallback={<div className="min-h-72"><PageLoading label="Loading the next race" /></div>}>

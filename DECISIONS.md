@@ -55,7 +55,7 @@ USA Cycling integration point: if the series is sanctioned, the sanctioning body
 
 **D-016. Default settings and reference data live in a migration.** The four categories, the default points table, the venue placeholder, and `app_settings` defaults are configuration that every environment needs, so they're in `20261104000400_defaults.sql`. Demo data (season, events, riders) is in the seed script only.
 
-**D-017. The venue coordinates are a placeholder near Brevard, North Carolina.** The exact location of Connestee Nature Park wasn't verified while building. The venue row is marked `coordinates_confirmed = false`, and event pages say the location is still being confirmed until an admin updates it.
+**D-017. The venue coordinates are a placeholder near Brevard, North Carolina.** The exact location of Conestee Nature Park wasn't verified while building. The venue row is marked `coordinates_confirmed = false`, and event pages say the location is still being confirmed until an admin updates it.
 
 **D-018. `citext` lives in the `extensions` schema.** This matches Supabase's convention and keeps extension functions out of `public`.
 
