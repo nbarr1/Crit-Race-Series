@@ -190,7 +190,7 @@ The Playwright tests need no database. They check the public shell, sign-in form
 
 ### Data-backed end-to-end tests
 
-`npm run test:e2e:data` builds a fresh database with the migrations and seed data (`scripts/e2e-db.sh`), puts "Race 4" on today's date, and runs the real app against it. Because the Supabase stack isn't available in every environment, the app talks to `e2e/support/fake-supabase.mjs`. This test-only server answers the app's auth and REST calls by running them against the local database as the signed-in user, with row-level security applied. Never point a real deployment at it (DECISIONS.md D-082).
+`npm run test:e2e:data` builds a fresh database with the migrations and seed data (`scripts/e2e-db.sh`) and puts "Race 4" on today's date. It then builds and runs the real app against that database. The database is created before the build, because public pages prerender their cached data (announcements, sponsors) at build time. Because the Supabase stack isn't available in every environment, the app talks to `e2e/support/fake-supabase.mjs`. This test-only server answers the app's auth and REST calls by running them against the local database as the signed-in user, with row-level security applied. Never point a real deployment at it (DECISIONS.md D-082).
 
 The event information tests check the event page's weather panel, the home page banner and sponsor strip, the announcements and sponsors pages, and the calendar files. Their weather comes from a stand-in for Open-Meteo in the same test server (same response shape, made-up values), so they test the app's request, parsing, and display, not the live service.
 

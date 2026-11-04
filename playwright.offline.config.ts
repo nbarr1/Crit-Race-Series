@@ -22,13 +22,14 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   timeout: 120_000,
-  globalSetup: "./e2e/offline/global-setup.ts",
   use: { baseURL: `http://localhost:${port}`, trace: "retain-on-failure" },
   projects: [{ name: "tablet", use: { ...devices["Pixel 7"] } }],
   webServer: [
     { command: "node e2e/support/fake-supabase.mjs", port: fakePort, env, reuseExistingServer: false },
     {
-      command: `npm run build && npx next start -p ${port}`,
+      // Build the database before the app: public pages prerender cached data
+      // (announcements, sponsors) at build time, so the seed must exist then.
+      command: `bash scripts/e2e-db.sh && npm run build && npx next start -p ${port}`,
       port,
       env: { ...env, NEXT_DIST_DIR: ".next-e2e" },
       timeout: 300_000,
