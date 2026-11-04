@@ -26,7 +26,7 @@ jwt_expiry = 3600
 enable_signup = true
 
 [auth.email]
-enable_signup = true
+enabled = true
 enable_confirmations = false
 otp_length = 6
 otp_expiry = 3600
@@ -43,6 +43,3 @@ content_path = "./supabase/templates/magic_link.html"
 enabled = true
 file_size_limit = "20MiB"
 
-[inbucket]
-enabled = true
-port = 54324
