@@ -22,7 +22,7 @@ For every assumption and trade-off, see [DECISIONS.md](DECISIONS.md).
 - Supabase: Postgres, Auth (email one-time code and magic link, optional Google), Storage, and row-level security
 - Zod 4 for server-side validation
 - Vitest for unit tests, Playwright for end-to-end tests, and plain SQL tests for row-level security
-- Stripe Checkout and webhooks for payments, Resend for email, and pdf-lib for signed waiver PDFs
+- Stripe Checkout and webhooks for payments, Gmail SMTP (through Nodemailer) for email, and pdf-lib for signed waiver PDFs
 - Open-Meteo for race-day forecasts, and the National Weather Service API for optional alerts
 
 ## Project layout
@@ -54,10 +54,10 @@ Prerequisites: Node.js 22 or later, and a Supabase project (hosted, or local thr
 
    ```bash
    npx supabase link --project-ref <your-project-ref>
-   npx supabase db push
+   npx supabase db push --remote
    ```
 
-   For a local Supabase stack, `npx supabase db reset` applies them instead.
+   Supabase CLI 3.0 and later target the local stack by default, so `--remote` sends the push to the linked hosted project. `npx supabase migration list --remote` shows which migrations the hosted project has. For a local Supabase stack, `npx supabase db reset` applies them instead.
 
 4. Configure Supabase Auth (see the next section).
 
@@ -75,7 +75,7 @@ Prerequisites: Node.js 22 or later, and a Supabase project (hosted, or local thr
    npm run dev
    ```
 
-Without Supabase settings, the app still starts and shows a setup notice in place of data. Without Resend settings, emails are written to the server log instead of sent.
+Without Supabase settings, the app still starts and shows a setup notice in place of data. Without SMTP settings, emails are written to the server log instead of sent.
 
 ### Configure Supabase Auth
 
@@ -84,7 +84,7 @@ In the Supabase dashboard, under **Authentication**:
 1. Under **URL Configuration**, set the site URL to your app's URL, and add `<site URL>/auth/confirm` as a redirect URL.
 2. Under **Email Templates**, replace the **Magic Link** template with the contents of `supabase/templates/magic_link.html`. The template includes both the six-digit code and a link to `/auth/confirm`, so riders can sign in either way.
 3. Under **Providers**, keep **Email** on. Passwords aren't used.
-4. Under **SMTP Settings**, connect a sender (for example, Resend's SMTP service). Supabase's built-in sender is rate-limited and meant for testing only.
+4. Under **SMTP Settings**, connect a sender. The Gmail account and app password from "Configure email" work here: host `smtp.gmail.com`, port `465`, the Gmail address as the username and sender, and the app password as the password. Supabase's built-in sender is rate-limited and meant for testing only.
 5. Optional: to turn on Google sign-in, enable the Google provider and set `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`.
 
 The local CLI stack reads these settings from `supabase/config.toml`.
@@ -104,10 +104,15 @@ The local CLI stack reads these settings from `supabase/config.toml`.
 
 To run the series without online payments, set `payments_enabled` to `false` in the `app_settings` table. Priced races then confirm right away, and riders pay at the desk.
 
-### Configure Resend
+### Configure email
 
-1. Verify a sending domain in [Resend](https://resend.com/domains).
-2. Set `RESEND_API_KEY`, and set `EMAIL_FROM` to an address on that domain. `EMAIL_REPLY_TO` is optional.
+The app sends email over SMTP, and its defaults suit a Gmail account, which needs no domain of your own.
+
+1. Create a Gmail account for the series, or use an existing one.
+2. Under **Google Account > Security**, turn on 2-Step Verification, then create an **App password**.
+3. Set `SMTP_USER` to the Gmail address and `SMTP_PASSWORD` to the app password. `EMAIL_FROM` (a display name with the same address) and `EMAIL_REPLY_TO` are optional.
+
+Personal Gmail accounts have a daily sending limit (about 500 messages), so a large announcement can hit it, and mail from a free address is more likely to land in spam than mail from your own domain. To use another provider, set `SMTP_HOST` and `SMTP_PORT` as well.
 
 The app sends registration and waitlist confirmations, waitlist promotions, cancellations, season pass confirmations, and signed waiver PDFs.
 
@@ -215,7 +220,7 @@ With Supabase, Stripe test mode, and the seed data in place:
 ### Supabase
 
 1. Create a production project.
-2. Link it and push the migrations: `npx supabase link --project-ref <ref>` and then `npx supabase db push`.
+2. Link it and push the migrations: `npx supabase link --project-ref <ref>` and then `npx supabase db push --remote`.
 3. Configure Auth as described in "Configure Supabase Auth."
 4. Make the organizers admins with the SQL in "Seed data." Don't run the seed script against production.
 5. In **Table Editor > venues**, confirm the venue's address and coordinates, and set `coordinates_confirmed` to true.
@@ -229,7 +234,7 @@ With Supabase, Stripe test mode, and the seed data in place:
 
 ## Environment variables
 
-Every variable is listed with a description in [.env.example](.env.example). Registration needs the Supabase values, `NEXT_PUBLIC_SITE_URL`, the Stripe keys (when payments are on), the Resend values (to send email), and `CRON_SECRET`. The weather forecast needs no variables. `NWS_USER_AGENT` turns on weather alerts.
+Every variable is listed with a description in [.env.example](.env.example). Registration needs the Supabase values, `NEXT_PUBLIC_SITE_URL`, the Stripe keys (when payments are on), the SMTP values (to send email), and `CRON_SECRET`. The weather forecast needs no variables. `NWS_USER_AGENT` turns on weather alerts.
 
 ## Race-day check-in
 
