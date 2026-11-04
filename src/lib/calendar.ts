@@ -25,10 +25,10 @@ export function toCalendarEvent(e: Ev): CalendarEvent | null {
     .map((c) => `${c.categories.name} ${formatTime(c.start_at)}`)
     .join(", ");
   return {
-    uid: `${e.id}@connestee-crit-series`,
+    uid: `${e.id}@conestee-crit-series`,
     start: new Date(window.start),
     end: new Date(window.end),
-    summary: `${e.name}, Connestee Crit Series`,
+    summary: `${e.name}, Conestee Crit Series`,
     location: e.venues ? [e.venues.name, e.venues.address].filter(Boolean).join(", ") : undefined,
     description: `Start times (Eastern): ${starts}. Details, weather, and registration: ${site}/events/${e.id}`,
     url: `${site}/events/${e.id}`,

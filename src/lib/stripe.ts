@@ -7,7 +7,7 @@ let client: Stripe | null = null;
 export function getStripe(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error("STRIPE_SECRET_KEY is not set");
-  client ??= new Stripe(key, { appInfo: { name: "connestee-crit-series" } });
+  client ??= new Stripe(key, { appInfo: { name: "conestee-crit-series" } });
   return client;
 }
 

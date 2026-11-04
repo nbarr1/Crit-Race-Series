@@ -3,7 +3,7 @@ export const SAMPLE_WAIVER_TITLE = "Release of liability, assumption of risk, an
 
 export const SAMPLE_WAIVER_BODY = `**Sample text only. Have a lawyer review the waiver before the series opens.**
 
-I am signing up to take part in bicycle races in the Connestee Crit Series ("the Series").
+I am signing up to take part in bicycle races in the Conestee Crit Series ("the Series").
 
 1. **Risks.** Bicycle racing is dangerous. Riders can crash and be seriously hurt or killed. Risks include contact with other riders, road surfaces, spectators, vehicles, weather, and course obstacles.
 2. **Assumption of risk.** I take part voluntarily and accept these risks.

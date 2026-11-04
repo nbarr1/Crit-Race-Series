@@ -21,6 +21,6 @@ export async function GET() {
     .order("event_date");
   const entries = ((data ?? []) as never[]).map(toCalendarEvent).filter((e) => e !== null);
   return new NextResponse(buildCalendar((season as { name: string }).name || SERIES_NAME, entries), {
-    headers: ICS_HEADERS("connestee-crit-series.ics"),
+    headers: ICS_HEADERS("conestee-crit-series.ics"),
   });
 }

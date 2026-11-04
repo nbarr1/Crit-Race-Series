@@ -1,6 +1,6 @@
-# Connestee Crit Series
+# Conestee Crit Series
 
-A mobile-first web app for a summer criterium race series at Connestee Nature Park: online registration, waivers, race-day check-in, event information, results, and series standings.
+A mobile-first web app for a summer criterium race series at Conestee Nature Park: online registration, waivers, race-day check-in, event information, results, and series standings.
 
 The app was built in six phases (see the build prompt). This README describes what exists.
 
@@ -128,7 +128,7 @@ curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/regi
 
 The event page's forecast comes from [Open-Meteo](https://open-meteo.com/), which needs no API key. The server must be able to reach `api.open-meteo.com`. Forecasts are cached for 30 minutes.
 
-To show National Weather Service alerts as well, set `NWS_USER_AGENT` to a name and contact email, for example `ConnesteeCritSeries (races@example.com)`. The server must be able to reach `api.weather.gov`.
+To show National Weather Service alerts as well, set `NWS_USER_AGENT` to a name and contact email, for example `ConesteeCritSeries (races@example.com)`. The server must be able to reach `api.weather.gov`.
 
 ### Staff content
 
@@ -165,7 +165,7 @@ To set up a new season: create it under **Seasons**, add its first event under *
 npm run seed
 ```
 
-The seed script creates one active season ("2027 Connestee Crit Series"), 10 Wednesday-evening events from May through August 2027, a sample waiver, three fictional sponsors, one admin, one staff user, and 40 riders. Riders are registered for the first four or five races, and the first three races have published results, so standings have data.
+The seed script creates one active season ("2027 Conestee Crit Series"), 10 Wednesday-evening events from May through August 2027, a sample waiver, three fictional sponsors, one admin, one staff user, and 40 riders. Riders are registered for the first four or five races, and the first three races have published results, so standings have data.
 
 - The four categories, the default points table, the venue, and the admin settings come from the migrations, not the seed.
 - Seeded users get `@example.test` email addresses, which can't receive mail. To sign in as the seeded admin or staff user, set `SEED_ADMIN_EMAIL` and `SEED_STAFF_EMAIL` to real inboxes before seeding.

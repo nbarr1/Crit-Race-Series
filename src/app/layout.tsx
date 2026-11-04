@@ -7,7 +7,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: SERIES_NAME, template: `%s | ${SERIES_NAME}` },
-  description: "Criterium racing at Connestee Nature Park. Schedule, registration, results, and standings.",
+  description: "Criterium racing at Conestee Nature Park. Schedule, registration, results, and standings.",
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
   appleWebApp: { capable: true, title: "Crit Series", statusBarStyle: "default" },
 };

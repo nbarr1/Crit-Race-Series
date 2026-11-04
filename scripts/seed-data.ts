@@ -12,7 +12,7 @@ import { ageOn } from "../src/lib/time";
 import { SAMPLE_WAIVER_BODY as SAMPLE_WAIVER, SAMPLE_WAIVER_TITLE } from "../src/lib/sample-waiver";
 
 export const SEED_EMAIL_DOMAIN = "example.test";
-export const SEED_SEASON_NAME = "2027 Connestee Crit Series";
+export const SEED_SEASON_NAME = "2027 Conestee Crit Series";
 
 // Deterministic pseudo-random numbers so every seed run produces the same data.
 function mulberry32(seed: number) {
