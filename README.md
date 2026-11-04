@@ -8,7 +8,7 @@ The app is built in six phases (see the build prompt). This README describes wha
 |---|---|---|
 | 1. Foundation | Schema, row-level security, auth, onboarding, schedule, seed data | Done |
 | 2. Registration and waivers | Registration flow, waiver signing and PDFs, Stripe, waitlist, email | Done |
-| 3. Check-in | Staff roster, QR scanning, walk-ups, offline queue, start lists | Not started |
+| 3. Check-in | Staff roster, QR scanning, walk-ups, offline queue, start lists | Done |
 | 4. Event information | Home page, weather, announcements, sponsors, calendar files | Not started |
 | 5. Results and standings | CSV upload and matching, publishing, points engine | Not started |
 | 6. Admin and polish | Dashboard, CRUD screens, exports, accessibility and Lighthouse passes | Not started |
@@ -144,7 +144,8 @@ update public.profiles set role = 'admin' where email = 'you@example.com';
 |---|---|
 | `npm test` | Vitest unit tests |
 | `npm run test:db` | SQL row-level security tests, plus a check that the seed data loads |
-| `npm run test:e2e` | Playwright tests (builds and starts the app on port 3100) |
+| `npm run test:e2e` | Playwright smoke tests without a database (builds and starts the app on port 3100) |
+| `npm run test:e2e:data` | Playwright tests against seeded data, including offline check-in (needs the `PG*` variables) |
 | `npm run check` | Type check, lint, and unit tests |
 
 ### SQL security tests
@@ -170,6 +171,12 @@ The registration tests (`supabase/tests/registration.test.sql`) cover the waiver
 ### End-to-end tests
 
 The Playwright tests need no database. They check the public shell, sign-in form validation, signed-out redirects from rider pages, that the Stripe webhook rejects unsigned requests, that the scheduled job requires its secret, and tap target size. Flows that need a live Supabase project and Stripe test mode (signing in, paying, check-in) aren't covered yet. Verify those by hand with the steps in "Try the registration flow."
+
+### Data-backed end-to-end tests
+
+`npm run test:e2e:data` builds a fresh database with the migrations and seed data (`scripts/e2e-db.sh`), puts "Race 4" on today's date, and runs the real app against it. Because the Supabase stack isn't available in every environment, the app talks to `e2e/support/fake-supabase.mjs`. This test-only server answers the app's auth and REST calls by running them against the local database as the signed-in user, with row-level security applied. Never point a real deployment at it (DECISIONS.md D-082).
+
+The offline test covers the phase 3 acceptance criterion. With the network turned off, a staff member checks in 20 seeded riders and reloads the page, which reopens from the service worker with all 20 changes still queued. When the network comes back, the test checks that all 20 reached the database with distinct bibs and their offline check-in times.
 
 ### Try the registration flow
 
@@ -202,6 +209,14 @@ With Supabase, Stripe test mode, and the seed data in place:
 
 Every variable is listed with a description in [.env.example](.env.example). Registration needs the Supabase values, `NEXT_PUBLIC_SITE_URL`, the Stripe keys (when payments are on), the Resend values (to send email), and `CRON_SECRET`. The weather variable is used in phase 4.
 
-## Staff guide
+## Race-day check-in
 
-`STAFF_GUIDE.md`, the race-day guide for volunteers, is written in phase 3 alongside the check-in tools it describes.
+Staff open **Staff > Open race-day check-in** (`/staff/check-in`). It opens to today's event (or the next one) and works offline after it has been opened once with a signal. For the volunteer instructions, see [STAFF_GUIDE.md](STAFF_GUIDE.md).
+
+To make a volunteer staff, have them sign in once, then run this in the Supabase SQL editor:
+
+```sql
+update public.profiles set role = 'staff' where email = 'volunteer@example.com';
+```
+
+The staff management screen is planned for phase 6.

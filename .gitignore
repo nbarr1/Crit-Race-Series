@@ -50,3 +50,5 @@ next-env.d.ts
 # supabase
 supabase/.temp/
 supabase/.branches/
+/.next-e2e/
+/.tmp-e2e/

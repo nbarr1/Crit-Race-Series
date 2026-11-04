@@ -4,6 +4,8 @@ const port = Number(process.env.PORT ?? 3100);
 
 export default defineConfig({
   testDir: "e2e",
+  // Data-backed tests have their own config (playwright.offline.config.ts).
+  testIgnore: ["offline/**"],
   fullyParallel: true,
   retries: process.env.CI ? 2 : 0,
   use: {

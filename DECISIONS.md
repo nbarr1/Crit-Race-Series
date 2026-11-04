@@ -145,6 +145,42 @@ USA Cycling integration point: if the series is sanctioned, the sanctioning body
 
 **D-067. A scheduled job runs every 15 minutes.** `vercel.json` schedules `/api/cron/registrations`, which Vercel calls with `CRON_SECRET`. Vercel's Hobby plan runs cron jobs at most once a day, so a 15-minute schedule needs a paid plan. On Hobby, expired holds are still released whenever someone registers for that category, but promotion emails and PDF retries wait for the daily run. A free alternative is to call the URL from another scheduler with the same bearer token.
 
+## Phase 3: race-day check-in
+
+### Check-in rules
+
+**D-070. Check-in logic lives in database functions, and every operation is idempotent.** Each staff action (check-in, desk payment, eligibility override, on-device waiver) carries an operation ID that the device creates. Replaying an operation, after a dropped response or a second sync, returns the first result and changes nothing.
+
+**D-071. When two check-ins conflict, the earliest wins.** If two devices check in the same rider while offline, the earliest check-in time is kept, along with that device's bib and staff member. Every attempt is written to `check_in_events`, which is append-only, so both are logged (section 5.4). A later check-in with a different bib keeps the bib already assigned and is logged as `already_checked_in_bib_kept`.
+
+**D-072. Check-in needs a confirmed registration and a current waiver.** Unpaid (`pending_payment`), pay-at-desk, and waitlisted riders are confirmed when staff record a desk payment: cash, card at the desk, Stripe payment link, or comp. Staff may confirm a waitlisted rider over capacity, because that's a desk decision. Riders who paid online or hold a season pass can't be charged again.
+
+**D-073. Some actions need a connection.** Walk-up registration, undoing a check-in, rider search, and start lists need a signal. Walk-ups create a rider on the server, and undo must not race with queued check-ins. Everything else works offline.
+
+**D-074. The cached roster leaves out the most sensitive fields.** The roster saved on staff devices has names, team, category, bib, and status. Emergency contacts, email addresses, and phone numbers are left out, and birth dates are reduced to an under-18 flag. A lost phone then exposes as little as possible. Staff can still read emergency contacts online through the database, and an emergency contact sheet is planned for phase 6.
+
+**D-075. Offline waivers keep the device's time.** A waiver signed on a staff device records the device's signing time, the staff device's user agent (from the sync request), and the collecting staff member. The IP address is left empty, because the address that later syncs the queue says nothing about where the rider signed. The rider types their name to match their profile, and minors need a guardian, as online.
+
+**D-076. Device clocks are trusted, within limits.** Check-in and signing times from a device are kept unless they're in the future or more than two days old (a wrong clock). Out-of-range times are replaced with the time the server receives them.
+
+**D-077. Bibs are suggested, and uniqueness is checked twice.** The panel suggests the lowest unused number from 101 and warns when a typed bib belongs to someone else on the cached roster. The database rejects duplicates per event. A duplicate that only shows up at sync (two offline devices) appears as a failed change for staff to fix.
+
+### Offline design
+
+**D-078. Queued changes and the roster are kept in local storage.** Each event has its own roster snapshot, queue, and failed-change list in `localStorage`. A few hundred riders fit easily, so IndexedDB isn't needed. Each change is saved before it's sent, and the screen always shows the roster with queued changes applied. Sync runs on reconnect, on focus, every 20 seconds, and after each change. If storage isn't available (private browsing), a banner tells staff to stay online until changes sync.
+
+**D-079. A hand-written service worker makes the screen open offline.** `public/sw.js` caches `/staff/check-in` (network first, last good copy as fallback) and Next.js build files (cache first). Nothing else is cached, and API responses never are. Riders' pages don't work offline. Instead, riders are asked to screenshot their check-in code.
+
+**D-080. The QR code holds the registration ID.** The code on My races encodes `CRS1:<registration id>`. Registration IDs are random UUIDs, the code is shown only to the rider, and staff still see the rider's name before checking in. Scanning looks the ID up in the cached roster, so it works offline. The scanner uses the browser's BarcodeDetector where it exists (Chrome on Android) and jsQR elsewhere (Safari on iOS). jsQR is loaded when the check-in screen opens, so it's available offline.
+
+**D-081. Start lists are PDF and CSV.** The PDF (pdf-lib) has one section per category, sorted by bib, with team, license number, and a checked-in column for the officials. The CSV has the same data, with formula-safe cells.
+
+### Testing
+
+**D-082. Data-backed end-to-end tests use a test-only Supabase stand-in.** Supabase's Docker images aren't available in the build environment, and running a downloaded PostgREST binary wasn't allowed. Instead, `e2e/support/fake-supabase.mjs` answers the few auth and REST calls the app makes by running them against the real local Postgres database, as the `authenticated` role with the JWT claims set, as PostgREST does. The app, the database functions, and row-level security are real. The stand-in trusts a token's user ID without checking its signature, so it must never serve a real app. Run the same flows against a real Supabase project before launch.
+
+**D-083. Security headers are set for every page.** These are `X-Content-Type-Options`, `X-Frame-Options: DENY`, a strict referrer policy, and a `Permissions-Policy` that allows the camera only for this site and blocks the microphone and location.
+
 ## Open questions for the organizers
 
 These don't block the build, but the answers change settings or copy:
@@ -156,3 +192,4 @@ These don't block the build, but the answers change settings or copy:
 5. The sender email domain for Resend.
 6. Whether to refund automatically when riders cancel before registration closes (`refund_policy`).
 7. Whether to sell a season pass, and its price per category.
+8. Bib numbers: whether riders keep one bib all season (the seed data does), and the starting number (the app suggests from 101).

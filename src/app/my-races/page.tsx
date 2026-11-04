@@ -10,6 +10,7 @@ import { Alert, Badge, Card } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { RegistrationStatusBadge } from "@/components/registration-status";
 import { RaceActions } from "@/components/my-races/race-actions";
+import { CheckInCode } from "@/components/my-races/check-in-code";
 import type { RegistrationStatus } from "@/lib/types";
 
 export const metadata: Metadata = { title: "My races" };
@@ -145,6 +146,9 @@ async function MyRaces({ searchParams }: Props) {
                     ) : null}
                     {r.status === "waitlisted" ? (
                       <p className="text-sm">We&apos;ll email you if a spot opens. You won&apos;t be charged unless it does.</p>
+                    ) : null}
+                    {r.status === "confirmed" && !r.checked_in_at && ev.status !== "canceled" ? (
+                      <CheckInCode registrationId={r.id} label={label} />
                     ) : null}
                     <RaceActions
                       registrationId={r.id}

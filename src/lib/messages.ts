@@ -42,6 +42,20 @@ const ERRORS: Record<string, string> = {
   not_found: "We couldn't find that registration.",
   season_not_open: "Season passes aren't on sale.",
   season_pass_unavailable: "Season passes aren't available online.",
+  // Staff (check-in desk)
+  staff_only: "Only race staff can do that. Sign in with a staff account.",
+  bib_required: "Enter a bib number.",
+  bib_taken: "That bib number is already assigned to another rider at this event.",
+  bib_invalid: "Bib numbers are whole numbers from 1 to 99999.",
+  not_confirmed: "This rider isn't confirmed yet. Record their payment first.",
+  payment_method_invalid: "Pick cash, card at the desk, Stripe link, or comp.",
+  amount_invalid: "Enter an amount between $0 and $1,000.",
+  already_paid: "This rider already paid online.",
+  reason_required: "Enter a reason for the override.",
+  waiver_changed: "A new waiver version was published. Reload the roster and have the rider sign the new version.",
+  guardian_required: "This rider is under 18. A parent or guardian must sign too.",
+  walk_up_details_required: "Enter the rider's first and last name, birth date, and an emergency contact name and phone.",
+  not_checked_in: "That rider isn't checked in.",
 };
 
 /** Maps a Postgres error message (a code raised by our functions) to text. */
