@@ -73,6 +73,42 @@ test("checks in 20 riders offline and syncs them when the signal returns", async
   expect(times.rows[0].ok).toBe(true);
 });
 
+test("stays offline when a roster download finishes after the signal drops", async ({ page, context, baseURL }) => {
+  const { rows: [staff] } = await db.query("select user_id as id, email::text from public.profiles where role = 'staff' limit 1");
+  const { rows: [event] } = await db.query("select id from public.events where name = 'Race 4'");
+  await signInAs(context, staff, baseURL!);
+
+  // Hold the next roster download until the test releases it.
+  let hold = false;
+  let release: () => void = () => {};
+  const released = new Promise<void>((resolve) => (release = resolve));
+  let started: () => void = () => {};
+  const startedHeld = new Promise<void>((resolve) => (started = resolve));
+  await page.route("**/api/staff/roster**", async (route) => {
+    if (!hold) return route.continue();
+    const res = await route.fetch();
+    started();
+    await released;
+    await route.fulfill({ response: res });
+  });
+
+  await page.goto(`/staff/check-in?event=${event.id}`);
+  await expect(page.getByText(/Roster downloaded/)).toBeVisible();
+  await expect(page.getByText("Online", { exact: true })).toBeVisible();
+
+  // A download starts, the signal drops, then the download finishes.
+  hold = true;
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await startedHeld;
+  await context.setOffline(true);
+  await expect(page.getByText("Offline", { exact: true })).toBeVisible();
+  const finished = page.waitForResponse("**/api/staff/roster**");
+  release();
+  await finished;
+  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 200)));
+  await expect(page.getByText("Offline", { exact: true })).toBeVisible();
+});
+
 test("the roster and sync endpoints refuse riders", async ({ request, context, baseURL }) => {
   const { rows: [rider] } = await db.query("select user_id as id, email::text from public.profiles where role = 'rider' and user_id is not null limit 1");
   const { rows: [event] } = await db.query("select id from public.events where name = 'Race 4'");

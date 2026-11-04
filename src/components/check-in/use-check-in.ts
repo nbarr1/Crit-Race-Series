@@ -17,6 +17,15 @@ export type Connection = "online" | "offline" | "unreachable" | "signed_out";
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 export type NewOp = DistributiveOmit<QueuedOp, "op_id" | "queued_at">;
 
+/**
+ * The state after a request succeeds. A request that started with a signal
+ * can finish after the signal drops; the browser's offline event has
+ * already set "offline" by then, so don't overwrite it with "online".
+ */
+function afterSuccess(): Connection {
+  return navigator.onLine ? "online" : "offline";
+}
+
 function safeStorage(): Storage | null {
   try {
     return typeof window === "undefined" ? null : window.localStorage;
@@ -82,7 +91,7 @@ export function useCheckIn(eventId: string) {
       const snap = (await res.json()) as RosterSnapshot;
       setSnapshot(snap);
       store.saveRoster(snap);
-      setConnection("online");
+      setConnection(afterSuccess());
     } catch {
       setConnection(navigator.onLine ? "unreachable" : "offline");
     }
@@ -113,7 +122,7 @@ export function useCheckIn(eventId: string) {
       const { results } = (await res.json()) as { results: OpResult[] };
       applyResults(results);
       setLastSynced(new Date().toISOString());
-      setConnection("online");
+      setConnection(afterSuccess());
       await refresh();
     } catch {
       setConnection(navigator.onLine ? "unreachable" : "offline");
