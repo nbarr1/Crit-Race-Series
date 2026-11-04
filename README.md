@@ -54,10 +54,10 @@ Prerequisites: Node.js 22 or later, and a Supabase project (hosted, or local thr
 
    ```bash
    npx supabase link --project-ref <your-project-ref>
-   npx supabase db push
+   npx supabase db push --remote
    ```
 
-   For a local Supabase stack, `npx supabase db reset` applies them instead.
+   Supabase CLI 3.0 and later target the local stack by default, so `--remote` sends the push to the linked hosted project. `npx supabase migration list --remote` shows which migrations the hosted project has. For a local Supabase stack, `npx supabase db reset` applies them instead.
 
 4. Configure Supabase Auth (see the next section).
 
@@ -215,7 +215,7 @@ With Supabase, Stripe test mode, and the seed data in place:
 ### Supabase
 
 1. Create a production project.
-2. Link it and push the migrations: `npx supabase link --project-ref <ref>` and then `npx supabase db push`.
+2. Link it and push the migrations: `npx supabase link --project-ref <ref>` and then `npx supabase db push --remote`.
 3. Configure Auth as described in "Configure Supabase Auth."
 4. Make the organizers admins with the SQL in "Seed data." Don't run the seed script against production.
 5. In **Table Editor > venues**, confirm the venue's address and coordinates, and set `coordinates_confirmed` to true.
