@@ -1,0 +1,48 @@
+# Supabase CLI configuration for local development (`npx supabase start`).
+# Hosted projects are configured in the Supabase dashboard; mirror the auth
+# settings there (see README, "Configure Supabase Auth").
+project_id = "crit-race-series"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+
+[db]
+port = 54322
+major_version = 17
+
+[db.seed]
+# Demo data comes from `npm run seed`, which creates auth users through the
+# admin API. There is no seed.sql.
+enabled = false
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/confirm"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+enable_confirmations = false
+otp_length = 6
+otp_expiry = 3600
+
+[auth.rate_limit]
+email_sent = 30
+token_verifications = 30
+
+[auth.email.template.magic_link]
+subject = "Your sign-in code for the Connestee Crit Series"
+content_path = "./supabase/templates/magic_link.html"
+
+[storage]
+enabled = true
+file_size_limit = "20MiB"
+
+[inbucket]
+enabled = true
+port = 54324
