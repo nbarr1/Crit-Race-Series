@@ -137,7 +137,7 @@ USA Cycling integration point: if the series is sanctioned, the sanctioning body
 
 **D-064. Waiver Markdown is rendered without raw HTML.** react-markdown ignores embedded HTML, so waiver text can't inject markup into the page.
 
-**D-065. Email skips reserved domains, and runs without Resend in development.** Messages to reserved domains (`.test`, `.example`, `.invalid`, `.localhost`, and `example.com/net/org`) are logged, not sent, so seeded riders can't cause bounces. Without `RESEND_API_KEY`, every message is logged. Resend idempotency keys prevent duplicate sends when a step retries.
+**D-065. Email goes out over Gmail SMTP, skips reserved domains, and runs without SMTP in development.** The series has no domain of its own, which Resend requires, so email changed from Resend to SMTP through Nodemailer after phase 5, with defaults for Gmail and an app password. Messages to reserved domains (`.test`, `.example`, `.invalid`, `.localhost`, and `example.com/net/org`) are logged, not sent, so seeded riders can't cause bounces. Without `SMTP_USER` and `SMTP_PASSWORD`, every message is logged. SMTP has no idempotency keys, so each message's key becomes a stable Message-ID header instead. The waiver step records each send in `waiver_signatures.email_sent_at` before the scheduled job retries, so a duplicate there needs a failure between sending and recording. Announcements go out as one message per recipient, so riders don't see each other's addresses. Personal Gmail accounts allow about 500 messages a day.
 
 **D-066. The signer's IP address comes from `x-forwarded-for`.** Vercel sets this header. On other hosts, configure the proxy to set it, or the recorded IP address could be spoofed.
 
@@ -195,7 +195,7 @@ USA Cycling integration point: if the series is sanctioned, the sanctioning body
 
 **D-095. Staff manage course maps.** Section 2 gives staff "manage course maps," so the staff edit guard on events now allows `course_map_id` as well as the weather note and notes. Everything else on an event stays admin-only. Removing a map hides it (soft delete) and leaves the file in storage.
 
-**D-096. Announcement emails go out once, at the publish time.** Staff choose no email, the riders registered for the event (confirmed, unpaid, or waitlisted), or everyone registered in the season (including season pass holders). A new announcement with a publish time that has arrived is emailed right away. A scheduled one is emailed by the scheduled job. Sending first claims the announcement (`emailed_at`), so two callers can't both send it. Emails go through Resend's batch endpoint, 100 at a time, and reserved test domains are skipped. These are messages about races riders signed up for. If the organizers start sending promotional mail, add an unsubscribe link.
+**D-096. Announcement emails go out once, at the publish time.** Staff choose no email, the riders registered for the event (confirmed, unpaid, or waitlisted), or everyone registered in the season (including season pass holders). A new announcement with a publish time that has arrived is emailed right away. A scheduled one is emailed by the scheduled job. Sending first claims the announcement (`emailed_at`), so two callers can't both send it. Emails go out as one SMTP message per recipient over a pool of three connections (D-065), and reserved test domains are skipped. A long list takes longer to send than Resend's batch endpoint did, and a personal Gmail account's daily limit (about 500 messages) caps how many riders one day's announcements can reach. These are messages about races riders signed up for. If the organizers start sending promotional mail, add an unsubscribe link.
 
 **D-097. The home page shows only the latest urgent announcement as a banner.** Other announcements are on the announcements page and on their event's page, with urgent ones listed first.
 
@@ -233,7 +233,7 @@ These don't block the build, but the answers change settings or copy:
 2. Real prices, and whether there's a season pass.
 3. Whether the series will be sanctioned by USA Cycling, which may bring its own waiver and license requirements.
 4. Start times, race lengths, and the actual event dates.
-5. The sender email domain for Resend.
+5. Whether to move email from a Gmail account to the series' own domain (D-065).
 6. Whether to refund automatically when riders cancel before registration closes (`refund_policy`).
 7. Whether to sell a season pass, and its price per category.
 8. Bib numbers: whether riders keep one bib all season (the seed data does), and the starting number (the app suggests from 101).

@@ -1,5 +1,6 @@
 import "server-only";
-import { Resend } from "resend";
+import { createHash } from "node:crypto";
+import nodemailer, { type Transporter } from "nodemailer";
 
 export type EmailAttachment = { filename: string; content: Uint8Array | Buffer };
 export type EmailMessage = {
@@ -8,70 +9,104 @@ export type EmailMessage = {
   html: string;
   text: string;
   attachments?: EmailAttachment[];
-  /** Resend uses this to drop duplicate sends of the same message. */
+  /**
+   * A stable key for this message. It becomes the Message-ID header, so a
+   * retried send carries the same ID as the first attempt (DECISIONS.md D-065).
+   */
   idempotencyKey?: string;
 };
 
-let client: Resend | null = null;
+type SmtpSettings = { host: string; port: number; user: string; pass: string; from: string };
 
 /**
- * Sends one email through Resend. Without RESEND_API_KEY (local development),
- * the message is logged instead, so flows still complete.
- * Returns true when the message was accepted or logged.
+ * SMTP settings from the environment. Defaults suit Gmail with an app
+ * password: smtp.gmail.com on port 465, sending as SMTP_USER.
+ * Returns null when SMTP_USER or SMTP_PASSWORD is missing.
+ */
+export function smtpSettings(env: Record<string, string | undefined> = process.env): SmtpSettings | null {
+  const user = env.SMTP_USER?.trim();
+  const pass = env.SMTP_PASSWORD?.replace(/\s+/g, "");
+  if (!user || !pass) return null;
+  return {
+    host: env.SMTP_HOST?.trim() || "smtp.gmail.com",
+    port: Number(env.SMTP_PORT) || 465,
+    user,
+    pass,
+    from: env.EMAIL_FROM?.trim() || user,
+  };
+}
+
+let transport: Transporter | null = null;
+let transportKey = "";
+
+function getTransport(s: SmtpSettings): Transporter {
+  const key = `${s.host}:${s.port}:${s.user}`;
+  if (!transport || key !== transportKey) {
+    transport = nodemailer.createTransport({
+      host: s.host,
+      port: s.port,
+      secure: s.port === 465,
+      auth: { user: s.user, pass: s.pass },
+      pool: true,
+      maxConnections: 3,
+    });
+    transportKey = key;
+  }
+  return transport;
+}
+
+/** A Message-ID built from the idempotency key and the sender's domain. */
+export function messageId(key: string, from: string): string {
+  const domain = /@([^>\s]+)>?\s*$/.exec(from)?.[1] ?? "localhost";
+  return `<${createHash("sha256").update(key).digest("hex").slice(0, 32)}@${domain}>`;
+}
+
+/**
+ * Sends one email over SMTP (Gmail by default). Without SMTP_USER and
+ * SMTP_PASSWORD (local development), the message is logged instead, so flows
+ * still complete. Returns true when the message was accepted or logged.
  */
 export async function sendEmail(msg: EmailMessage): Promise<boolean> {
   if (isReservedAddress(msg.to)) {
     console.info(`[email skipped: reserved test domain] to=${msg.to} subject="${msg.subject}"`);
     return true;
   }
-  const key = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
-  if (!key || !from) {
-    console.info(`[email skipped: RESEND_API_KEY or EMAIL_FROM not set] to=${msg.to} subject="${msg.subject}"`);
+  const smtp = smtpSettings();
+  if (!smtp) {
+    console.info(`[email skipped: SMTP_USER or SMTP_PASSWORD not set] to=${msg.to} subject="${msg.subject}"`);
     return true;
   }
-  client ??= new Resend(key);
-  const { error } = await client.emails.send(
-    {
-      from,
+  try {
+    await getTransport(smtp).sendMail({
+      from: smtp.from,
       to: msg.to,
       replyTo: process.env.EMAIL_REPLY_TO || undefined,
       subject: msg.subject,
       html: msg.html,
       text: msg.text,
       attachments: msg.attachments?.map((a) => ({ filename: a.filename, content: Buffer.from(a.content) })),
-    },
-    msg.idempotencyKey ? { idempotencyKey: msg.idempotencyKey } : undefined,
-  );
-  if (error) {
-    console.error("email send failed", msg.subject, error.message);
+      messageId: msg.idempotencyKey ? messageId(msg.idempotencyKey, smtp.from) : undefined,
+    });
+    return true;
+  } catch (err) {
+    console.error("email send failed", msg.subject, err instanceof Error ? err.message : err);
     return false;
   }
-  return true;
 }
 
 /**
- * Sends many messages through Resend's batch endpoint (up to 100 a request).
- * Reserved test domains are skipped. Returns how many were accepted.
+ * Sends many messages, one per recipient, so riders never see each other's
+ * addresses. Reserved test domains are skipped. Returns how many were accepted.
  */
 export async function sendBatch(messages: Omit<EmailMessage, "attachments">[], idempotencyPrefix: string): Promise<number> {
   const real = messages.filter((m) => !isReservedAddress(m.to));
-  const key = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
-  if (!key || !from) {
-    console.info(`[email skipped: RESEND_API_KEY or EMAIL_FROM not set] batch of ${real.length} "${messages[0]?.subject ?? ""}"`);
+  if (!smtpSettings()) {
+    console.info(`[email skipped: SMTP_USER or SMTP_PASSWORD not set] batch of ${real.length} "${messages[0]?.subject ?? ""}"`);
     return real.length;
   }
-  client ??= new Resend(key);
   let accepted = 0;
-  for (let i = 0; i < real.length; i += 100) {
-    const chunk = real.slice(i, i + 100);
-    const { error } = await client.batch.send(
-      chunk.map((m) => ({ from, to: m.to, replyTo: process.env.EMAIL_REPLY_TO || undefined, subject: m.subject, html: m.html, text: m.text })),
-      { idempotencyKey: `${idempotencyPrefix}/${i / 100}`.slice(0, 256) },
-    );
-    if (error) console.error("batch email failed", error.message);
-    else accepted += chunk.length;
+  for (const m of real) {
+    if (await sendEmail({ ...m, idempotencyKey: `${idempotencyPrefix}/${m.to}` })) accepted++;
   }
   return accepted;
 }
