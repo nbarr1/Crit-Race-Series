@@ -9,7 +9,7 @@ The app is built in six phases (see the build prompt). This README describes wha
 | 1. Foundation | Schema, row-level security, auth, onboarding, schedule, seed data | Done |
 | 2. Registration and waivers | Registration flow, waiver signing and PDFs, Stripe, waitlist, email | Done |
 | 3. Check-in | Staff roster, QR scanning, walk-ups, offline queue, start lists | Done |
-| 4. Event information | Home page, weather, announcements, sponsors, calendar files | Not started |
+| 4. Event information | Home page, weather, announcements, sponsors, calendar files | Done |
 | 5. Results and standings | CSV upload and matching, publishing, points engine | Not started |
 | 6. Admin and polish | Dashboard, CRUD screens, exports, accessibility and Lighthouse passes | Not started |
 
@@ -23,7 +23,7 @@ For every assumption and trade-off, see [DECISIONS.md](DECISIONS.md).
 - Zod 4 for server-side validation
 - Vitest for unit tests, Playwright for end-to-end tests, and plain SQL tests for row-level security
 - Stripe Checkout and webhooks for payments, Resend for email, and pdf-lib for signed waiver PDFs
-- Planned for later phases: Open-Meteo and the National Weather Service API
+- Open-Meteo for race-day forecasts, and the National Weather Service API for optional alerts
 
 ## Project layout
 
@@ -119,6 +119,22 @@ The app sends registration and waitlist confirmations, waitlist promotions, canc
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/registrations
 ```
 
+### Weather
+
+The event page's forecast comes from [Open-Meteo](https://open-meteo.com/), which needs no API key. The server must be able to reach `api.open-meteo.com`. Forecasts are cached for 30 minutes.
+
+To show National Weather Service alerts as well, set `NWS_USER_AGENT` to a name and contact email, for example `ConnesteeCritSeries (races@example.com)`. The server must be able to reach `api.weather.gov`.
+
+### Staff content
+
+Staff manage the following from the **Staff** page:
+
+- **Announcements**: post now or schedule, mark urgent (shown as a banner on the home page), and email the event's riders or the whole season list.
+- **Event information**: the weather and course note, event notes, course maps (image or PDF), and GPX files.
+- **Sponsors**: add sponsors with a tier, link, and logo, and show or hide them.
+
+Uploads are limited to 4 MB (DECISIONS.md D-094).
+
 ## Seed data
 
 ```bash
@@ -176,6 +192,8 @@ The Playwright tests need no database. They check the public shell, sign-in form
 
 `npm run test:e2e:data` builds a fresh database with the migrations and seed data (`scripts/e2e-db.sh`), puts "Race 4" on today's date, and runs the real app against it. Because the Supabase stack isn't available in every environment, the app talks to `e2e/support/fake-supabase.mjs`. This test-only server answers the app's auth and REST calls by running them against the local database as the signed-in user, with row-level security applied. Never point a real deployment at it (DECISIONS.md D-082).
 
+The event information tests check the event page's weather panel, the home page banner and sponsor strip, the announcements and sponsors pages, and the calendar files. Their weather comes from a stand-in for Open-Meteo in the same test server (same response shape, made-up values), so they test the app's request, parsing, and display, not the live service.
+
 The offline test covers the phase 3 acceptance criterion. With the network turned off, a staff member checks in 20 seeded riders and reloads the page, which reopens from the service worker with all 20 changes still queued. When the network comes back, the test checks that all 20 reached the database with distinct bibs and their offline check-in times.
 
 ### Try the registration flow
@@ -207,7 +225,7 @@ With Supabase, Stripe test mode, and the seed data in place:
 
 ## Environment variables
 
-Every variable is listed with a description in [.env.example](.env.example). Registration needs the Supabase values, `NEXT_PUBLIC_SITE_URL`, the Stripe keys (when payments are on), the Resend values (to send email), and `CRON_SECRET`. The weather variable is used in phase 4.
+Every variable is listed with a description in [.env.example](.env.example). Registration needs the Supabase values, `NEXT_PUBLIC_SITE_URL`, the Stripe keys (when payments are on), the Resend values (to send email), and `CRON_SECRET`. The weather forecast needs no variables. `NWS_USER_AGENT` turns on weather alerts.
 
 ## Race-day check-in
 

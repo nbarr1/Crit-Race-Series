@@ -2,11 +2,12 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPromotionEmails } from "@/lib/registration-service";
 import { finalizeSignature } from "@/lib/waiver-service";
+import { emailDueAnnouncements } from "@/lib/announcement-service";
 
 /**
  * Scheduled every 15 minutes (vercel.json). Releases expired unpaid holds,
- * emails riders promoted from the waitlist, and retries waiver PDFs and emails
- * that failed the first time. Vercel Cron sends CRON_SECRET as a bearer token.
+ * emails riders promoted from the waitlist, retries waiver PDFs and emails
+ * that failed the first time, and emails scheduled announcements. Vercel Cron sends CRON_SECRET as a bearer token.
  */
 export async function GET(request: NextRequest) {
   const secret = process.env.CRON_SECRET;
@@ -48,7 +49,10 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const announcementsEmailed = await emailDueAnnouncements();
+
   return NextResponse.json({
+    announcementsEmailed,
     promoted: Array.isArray(promoted) ? promoted.length : 0,
     notified,
     waiversFinalized: finalized,

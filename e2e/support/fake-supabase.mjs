@@ -25,6 +25,9 @@ pg.types.setTypeParser(1114, (v) => v.replace(" ", "T")); // timestamp
 pg.types.setTypeParser(1184, isoTs); // timestamptz
 pg.types.setTypeParser(20, (v) => Number(v)); // bigint
 const pool = new pg.Pool({ database: process.env.E2E_DB_NAME ?? "crit_race_series_e2e", options: "-c timezone=UTC" });
+// The test setup drops and recreates the database, which ends idle
+// connections. The pool reconnects on the next query.
+pool.on("error", (err) => console.warn("fake-supabase: idle connection closed:", err.message));
 
 const fkCache = new Map();
 async function foreignKeys(client) {
@@ -83,7 +86,10 @@ async function selectList(client, table, alias, select) {
     const fk = candidates[0];
     if (!fk) throw new Error(`no relationship ${table} -> ${target}`);
     const cols = await selectList(client, target, sub, inner);
-    const obj = `json_build_object(${cols.map((c) => `'${c.name}', ${c.expr}`).join(", ")})`;
+    const named = cols.filter((c) => c.name !== "*");
+    const pairs = `jsonb_build_object(${named.map((c) => `'${c.name}', ${c.expr}`).join(", ")})`;
+    // "table(*)" embeds every column, as PostgREST does.
+    const obj = cols.some((c) => c.name === "*") ? (named.length ? `(to_jsonb(${sub}) || ${pairs})` : `to_jsonb(${sub})`) : pairs;
     let expr;
     if (fk.src === table) {
       // Many-to-one: an object (or null).
@@ -162,6 +168,28 @@ const server = http.createServer(async (req, res) => {
   const auth = claims?.sub ? { sub: claims.sub, role: "authenticated", email: claims.email } : { role: "anon" };
   const wantsObject = (req.headers.accept ?? "").includes("vnd.pgrst.object");
   try {
+    // Stand-in for Open-Meteo's /v1/forecast (same response shape, made-up
+    // values), so tests can exercise the weather panel without the network.
+    if (url.pathname === "/v1/forecast") {
+      const date = url.searchParams.get("start_date") ?? "2027-05-12";
+      const time = Array.from({ length: 24 }, (_, h) => `${date}T${String(h).padStart(2, "0")}:00`);
+      return send(res, 200, {
+        latitude: Number(url.searchParams.get("latitude")),
+        longitude: Number(url.searchParams.get("longitude")),
+        timezone: url.searchParams.get("timezone"),
+        hourly: {
+          time,
+          temperature_2m: time.map((_, h) => 60 + h / 2),
+          apparent_temperature: time.map((_, h) => 59 + h / 2),
+          precipitation_probability: time.map(() => 20),
+          wind_speed_10m: time.map(() => 9),
+          wind_gusts_10m: time.map(() => 17),
+          wind_direction_10m: time.map(() => 315),
+        },
+        daily: { time: [date], sunrise: [`${date}T06:24`], sunset: [`${date}T20:31`] },
+      });
+    }
+
     if (url.pathname === "/auth/v1/user") {
       if (!claims?.sub) return send(res, 401, { message: "no session" });
       return send(res, 200, {

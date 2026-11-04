@@ -17,6 +17,17 @@ async function StaffHome() {
         Open race-day check-in
       </Link>
       <p className="text-sm text-muted-foreground">Check-in works offline once you&apos;ve opened it with a signal. Results upload arrives in a later build phase.</p>
+      <ul className="list-disc space-y-1 pl-5">
+        <li>
+          <Link href="/staff/announcements" className="font-semibold text-primary underline">Announcements: post and email riders</Link>
+        </li>
+        <li>
+          <Link href="/staff/sponsors" className="font-semibold text-primary underline">Sponsors</Link>
+        </li>
+        <li>
+          <Link href="/staff/events" className="font-semibold text-primary underline">Event information: course maps, GPX, weather notes</Link>
+        </li>
+      </ul>
       {profile.role === "admin" ? (
         <ul className="list-disc space-y-1 pl-5">
           <li>

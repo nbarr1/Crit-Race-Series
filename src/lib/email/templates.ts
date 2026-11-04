@@ -111,3 +111,14 @@ export function cancellationEmail(firstName: string, race: RaceLine, refundNote:
     text: `Hi ${firstName},\n\n${raceText(race)}\n\n${refundNote}\n`,
   };
 }
+
+export function announcementEmail(firstName: string, title: string, bodyText: string, url: string, urgent: boolean) {
+  const subject = urgent ? `Urgent: ${title}` : title;
+  const paragraphs = bodyText.split(/\n{2,}/).map((p) => `<p>${esc(p).replace(/\n/g, "<br>")}</p>`).join("");
+  return {
+    subject,
+    html: layout(title, `<p>Hi ${esc(firstName)},</p>${paragraphs}<p><a href="${esc(url)}">Read it on the series site</a></p>
+<p style="color:#475569;font-size:13px">You're getting this because you're registered for the Connestee Crit Series.</p>`),
+    text: `Hi ${firstName},\n\n${bodyText}\n\nRead it on the series site: ${url}\n\nYou're getting this because you're registered for the Connestee Crit Series.\n`,
+  };
+}

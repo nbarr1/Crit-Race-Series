@@ -51,6 +51,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           {children}
         </main>
         <footer className="mx-auto max-w-3xl px-4 pb-8 pt-4 text-sm text-muted-foreground">
+          <nav aria-label="Footer" className="mb-2 flex flex-wrap gap-x-4">
+            <Link href="/announcements" className="inline-flex min-h-11 items-center underline">Announcements</Link>
+            <Link href="/sponsors" className="inline-flex min-h-11 items-center underline">Sponsors</Link>
+            <Link href="/schedule" className="inline-flex min-h-11 items-center underline">Schedule</Link>
+          </nav>
           <p>Times shown in Eastern Time.</p>
         </footer>
       </body>

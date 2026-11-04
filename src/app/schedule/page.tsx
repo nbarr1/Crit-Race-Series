@@ -57,6 +57,11 @@ export default function Page() {
   return (
     <div className="space-y-4">
       <h1 className="text-3xl font-bold">Schedule</h1>
+      <p>
+        <a href="/schedule/calendar.ics" className="inline-flex min-h-11 items-center font-semibold text-primary underline">
+          Add the whole season to your calendar (.ics)
+        </a>
+      </p>
       <Suspense fallback={<PageLoading label="Loading the schedule" />}>
         <ScheduleList />
       </Suspense>

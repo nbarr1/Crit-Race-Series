@@ -4,6 +4,10 @@ const nextConfig: NextConfig = {
   // The data-backed end-to-end tests build into their own folder.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   cacheComponents: true,
+  experimental: {
+    // Course map and logo uploads (4 MB files plus form overhead). D-094.
+    serverActions: { bodySizeLimit: "5mb" },
+  },
   partialPrefetching: true,
   turbopack: {
     rules: {

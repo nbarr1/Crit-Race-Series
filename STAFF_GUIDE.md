@@ -53,6 +53,21 @@ A red banner says "Offline" and counts the changes waiting to send. Keep working
 
 At the bottom of the check-in screen, tap **Start list (PDF)** to print, or **Start list (CSV)** for a spreadsheet. Both list confirmed riders by category and bib, with a column showing who's checked in. Start lists need a signal.
 
+## Weather and course notes
+
+To warn riders about the course (for example, "Course is wet in turn 3"), open **Staff**, then **Event information**, and pick the event. Type the note under **Weather and course note** and tap **Save**. It shows above the forecast on the event page.
+
+## Posting an announcement
+
+1. Open **Staff**, then **Announcements**.
+2. Type a title and, if needed, a short message.
+3. Pick the event it's about, or leave it as the whole series.
+4. Choose **Urgent** for anything riders must see before they arrive, such as a course change or a delayed start. Urgent announcements show as a red banner on the home page.
+5. To email it, choose **Riders registered for the event** or **Everyone registered this season**. Emails go out once, when the announcement is posted.
+6. Tap **Post announcement**.
+
+To take an announcement down, tap **Remove** next to it.
+
 ## Posting results
 
 Results upload isn't in the app yet. Give the officials' result sheets to the organizers.

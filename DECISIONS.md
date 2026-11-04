@@ -181,6 +181,28 @@ USA Cycling integration point: if the series is sanctioned, the sanctioning body
 
 **D-083. Security headers are set for every page.** These are `X-Content-Type-Options`, `X-Frame-Options: DENY`, a strict referrer policy, and a `Permissions-Policy` that allows the camera only for this site and blocks the microphone and location.
 
+## Phase 4: event information
+
+**D-090. The forecast comes from Open-Meteo, cached on the server for 30 minutes.** The event page asks Open-Meteo for the venue's coordinates on race day, in Fahrenheit and mph, in Eastern Time. It shows the hours from the first start to the last finish, estimated as each race's minutes plus about 3 minutes a lap. The panel shows temperature, feels-like temperature, chance of rain, wind speed, gusts, and direction (an arrow plus a compass name such as "from the northwest (NW)"), and sunrise and sunset. A failed request isn't cached, so the next visitor tries again. The panel credits Open-Meteo, as its license (CC BY 4.0) requires. `OPEN_METEO_BASE_URL` can point at another host, for testing or a self-hosted instance.
+
+**D-091. The forecast appears only within Open-Meteo's range.** Open-Meteo forecasts today plus 15 days. Further out, the panel says "Forecast available closer to race day." Past and canceled races show no forecast. A staff note (`weather_override_text`) always shows above the forecast.
+
+**D-092. National Weather Service alerts are optional.** When `NWS_USER_AGENT` is set, the panel also shows active NWS alerts for the venue, for races in the next two days. The NWS asks API clients to identify themselves with a contact in the User-Agent, so alerts are off until the organizers provide one.
+
+**D-093. The wind arrow points where the wind is going.** Weather data gives the direction wind comes from. The arrow shows the way it blows, which is what a rider feels on the course, and the text label always says "from the ...". The arrow is hidden from screen readers. The text carries the meaning (WCAG 1.1.1).
+
+**D-094. Uploads are limited to 4 MB.** Course maps (PNG, JPEG, WebP, PDF), GPX files, and sponsor logos (PNG, JPEG, WebP, SVG) go through a server action, and Vercel caps request bodies at 4.5 MB. Files are stored with random names in the public `public-media` bucket. A larger file would need direct browser-to-storage uploads with signed URLs.
+
+**D-095. Staff manage course maps.** Section 2 gives staff "manage course maps," so the staff edit guard on events now allows `course_map_id` as well as the weather note and notes. Everything else on an event stays admin-only. Removing a map hides it (soft delete) and leaves the file in storage.
+
+**D-096. Announcement emails go out once, at the publish time.** Staff choose no email, the riders registered for the event (confirmed, unpaid, or waitlisted), or everyone registered in the season (including season pass holders). A new announcement with a publish time that has arrived is emailed right away. A scheduled one is emailed by the scheduled job. Sending first claims the announcement (`emailed_at`), so two callers can't both send it. Emails go through Resend's batch endpoint, 100 at a time, and reserved test domains are skipped. These are messages about races riders signed up for. If the organizers start sending promotional mail, add an unsubscribe link.
+
+**D-097. The home page shows only the latest urgent announcement as a banner.** Other announcements are on the announcements page and on their event's page, with urgent ones listed first.
+
+**D-098. Calendar files use UTC and stable IDs.** The season file (`/schedule/calendar.ics`) and each event's file use UTC times, so calendar apps convert them to the reader's time zone. Each event's `UID` is stable, so a canceled event updates the existing calendar entry (`STATUS:CANCELLED`) instead of adding a new one.
+
+**D-099. Images are plain `<img>` tags.** Course maps and sponsor logos come from storage at sizes that aren't known ahead of time. They load lazily below the fold, and the map links to its full-size file. Next.js image optimization would need the storage host configured at build time. It's worth revisiting if the Lighthouse pass in phase 6 flags these images.
+
 ## Open questions for the organizers
 
 These don't block the build, but the answers change settings or copy:
@@ -193,3 +215,5 @@ These don't block the build, but the answers change settings or copy:
 6. Whether to refund automatically when riders cancel before registration closes (`refund_policy`).
 7. Whether to sell a season pass, and its price per category.
 8. Bib numbers: whether riders keep one bib all season (the seed data does), and the starting number (the app suggests from 101).
+9. A contact email for the National Weather Service User-Agent, to turn on weather alerts.
+10. Sponsor tiers and logos.

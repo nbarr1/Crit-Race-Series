@@ -18,5 +18,8 @@ update public.events set event_date = (now() at time zone 'America/New_York')::d
 where name = 'Race 4';
 update public.event_categories ec set start_at = now() + interval '2 hours'
 from public.events e where e.id = ec.event_id and e.name = 'Race 4';
+insert into public.announcements (title, body_markdown, priority)
+values ('Course change for Race 4', 'Turn 3 is **closed**. Follow the cones.', 'urgent');
+update public.events set weather_override_text = 'Course is wet in turn 3.' where name = 'Race 4';
 SQL
 echo "e2e database $DB ready"

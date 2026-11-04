@@ -13,6 +13,8 @@ const env = {
   NEXT_PUBLIC_SITE_URL: `http://localhost:${port}`,
   FAKE_SUPABASE_PORT: String(fakePort),
   E2E_DB_NAME: "crit_race_series_e2e",
+  // Weather requests go to the stand-in server instead of api.open-meteo.com.
+  OPEN_METEO_BASE_URL: `http://127.0.0.1:${fakePort}`,
 };
 
 export default defineConfig({

@@ -51,6 +51,32 @@ export async function sendEmail(msg: EmailMessage): Promise<boolean> {
 }
 
 /**
+ * Sends many messages through Resend's batch endpoint (up to 100 a request).
+ * Reserved test domains are skipped. Returns how many were accepted.
+ */
+export async function sendBatch(messages: Omit<EmailMessage, "attachments">[], idempotencyPrefix: string): Promise<number> {
+  const real = messages.filter((m) => !isReservedAddress(m.to));
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.EMAIL_FROM;
+  if (!key || !from) {
+    console.info(`[email skipped: RESEND_API_KEY or EMAIL_FROM not set] batch of ${real.length} "${messages[0]?.subject ?? ""}"`);
+    return real.length;
+  }
+  client ??= new Resend(key);
+  let accepted = 0;
+  for (let i = 0; i < real.length; i += 100) {
+    const chunk = real.slice(i, i + 100);
+    const { error } = await client.batch.send(
+      chunk.map((m) => ({ from, to: m.to, replyTo: process.env.EMAIL_REPLY_TO || undefined, subject: m.subject, html: m.html, text: m.text })),
+      { idempotencyKey: `${idempotencyPrefix}/${i / 100}`.slice(0, 256) },
+    );
+    if (error) console.error("batch email failed", error.message);
+    else accepted += chunk.length;
+  }
+  return accepted;
+}
+
+/**
  * Reserved domains (RFC 2606 and RFC 6761) can never receive mail. Seeded demo
  * riders use them, so skipping them avoids bounces that hurt the sender's
  * reputation.

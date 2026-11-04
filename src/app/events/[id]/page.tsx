@@ -3,12 +3,15 @@ import { Suspense } from "react";
 import { PageLoading } from "@/components/page-loading";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
-import { eventPhase, getEvent } from "@/lib/data";
+import { eventPhase, getAnnouncements, getEvent, raceWindow } from "@/lib/data";
 import { formatCents, formatDateTime, formatEventDate, formatTime, nowMs, todayInDisplayTz } from "@/lib/time";
 import { Alert, Card } from "@/components/ui/card";
 import { EventStatusBadge } from "@/components/event-status-badge";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
+import { WeatherPanel } from "@/components/event/weather-panel";
+import { CourseMap } from "@/components/event/course-map";
+import { AnnouncementList } from "@/components/event/announcement-list";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -31,6 +34,8 @@ async function EventDetailView({ params }: Props) {
   const directions = venue
     ? `https://www.google.com/maps/dir/?api=1&destination=${venue.latitude},${venue.longitude}`
     : null;
+  const window = raceWindow(event.event_categories);
+  const announcements = await getAnnouncements({ eventId: event.id, limit: 10 });
 
   return (
     <article className="space-y-6">
@@ -56,7 +61,24 @@ async function EventDetailView({ params }: Props) {
             <p className="font-semibold">Online registration opens {formatDateTime(event.registration_opens_at)}.</p>
           ) : null
         ) : null}
+        <nav aria-label="On this page" className="flex flex-wrap gap-x-4 text-base font-semibold">
+          <a href="#weather-heading" className="inline-flex min-h-11 items-center text-primary underline">Weather</a>
+          {event.course_map || event.gpx.length ? (
+            <a href="#course-map" className="inline-flex min-h-11 items-center text-primary underline">Course map</a>
+          ) : null}
+          <a href="#venue-heading" className="inline-flex min-h-11 items-center text-primary underline">Directions</a>
+          <a href={`/events/${event.id}/calendar.ics`} className="inline-flex min-h-11 items-center text-primary underline">Add to calendar</a>
+        </nav>
       </header>
+
+      {announcements.length ? (
+        <section aria-labelledby="event-ann-heading" className="space-y-2">
+          <h2 id="event-ann-heading" className="text-2xl font-bold">
+            Announcements
+          </h2>
+          <AnnouncementList items={announcements} />
+        </section>
+      ) : null}
 
       <section aria-labelledby="categories-heading" className="space-y-3">
         <h2 id="categories-heading" className="text-2xl font-bold">
@@ -110,6 +132,22 @@ async function EventDetailView({ params }: Props) {
         </section>
       ) : null}
 
+      {venue && window ? (
+        <Suspense fallback={<PageLoading label="Loading the forecast" />}>
+          <WeatherPanel
+            lat={venue.latitude}
+            lon={venue.longitude}
+            eventDate={event.event_date}
+            windowStart={window.start}
+            windowEnd={window.end}
+            overrideText={event.weather_override_text}
+            canceled={event.status === "canceled"}
+          />
+        </Suspense>
+      ) : null}
+
+      <CourseMap map={event.course_map} gpx={event.gpx} eventName={event.name} />
+
       {event.notes ? (
         <section aria-labelledby="notes-heading" className="space-y-2">
           <h2 id="notes-heading" className="text-2xl font-bold">
@@ -125,7 +163,7 @@ async function EventDetailView({ params }: Props) {
 export default function Page({ params }: Props) {
   return (
     <Suspense fallback={<PageLoading label="Loading the event" />}>
-        <EventDetailView params={params} />
-      </Suspense>
+      <EventDetailView params={params} />
+    </Suspense>
   );
 }

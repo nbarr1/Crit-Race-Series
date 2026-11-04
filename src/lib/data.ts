@@ -2,7 +2,8 @@ import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isSupabaseConfigured } from "@/lib/env";
-import type { Availability, EventCategory, RaceEvent, Venue } from "@/lib/types";
+import type { Announcement, Availability, EventCategory, Media, RaceEvent, Sponsor, Venue } from "@/lib/types";
+import { publicEnv } from "@/lib/env";
 
 export type ScheduleEvent = RaceEvent & {
   venues: Pick<Venue, "name"> | null;
@@ -38,6 +39,8 @@ export type EventDetail = RaceEvent & {
   venues: Venue | null;
   event_categories: EventCategory[];
   availability: Record<string, Availability>;
+  course_map: Media | null;
+  gpx: Media[];
 };
 
 export async function getEvent(id: string): Promise<EventDetail | null> {
@@ -50,20 +53,23 @@ export async function getEvent(id: string): Promise<EventDetail | null> {
   const { data, error } = await supabase
     .from("events")
     .select(
-      "id, season_id, venue_id, name, event_date, registration_opens_at, registration_closes_at, status, notes, weather_override_text, venues(*), event_categories(id, event_id, category_id, start_at, duration_minutes, laps, capacity, price_cents, walk_up_price_cents, categories(name, sort_order, description, eligibility_notes))",
+      "id, season_id, venue_id, name, event_date, registration_opens_at, registration_closes_at, status, notes, weather_override_text, course_map_id, venues(*), course_map:media!events_course_map_id_fkey(id, type, storage_path, caption, event_id), event_categories(id, event_id, category_id, start_at, duration_minutes, laps, capacity, price_cents, walk_up_price_cents, categories(name, sort_order, description, eligibility_notes))",
     )
     .eq("id", id)
     .is("deleted_at", null)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  const event = data as unknown as Omit<EventDetail, "availability">;
+  const event = data as unknown as Omit<EventDetail, "availability" | "gpx">;
   event.event_categories.sort((a, b) => a.categories.sort_order - b.categories.sort_order);
 
-  const { data: avail } = await supabase.from("event_category_availability").select("*").eq("event_id", id);
+  const [{ data: avail }, { data: gpx }] = await Promise.all([
+    supabase.from("event_category_availability").select("*").eq("event_id", id),
+    supabase.from("media").select("id, type, storage_path, caption, event_id").eq("event_id", id).eq("type", "gpx").is("deleted_at", null),
+  ]);
   const availability: Record<string, Availability> = {};
   for (const row of (avail ?? []) as Availability[]) availability[row.event_category_id] = row;
-  return { ...event, availability };
+  return { ...event, availability, gpx: (gpx ?? []) as Media[] };
 }
 
 export function eventPhase(e: Pick<RaceEvent, "status" | "event_date">, today: string): "upcoming" | "today" | "canceled" | "completed" {
@@ -155,3 +161,55 @@ export async function getOpenRaces(): Promise<OpenRace[]> {
       })),
   }));
 }
+
+/** Public URL for a file in the public-media storage bucket. */
+export function publicMediaUrl(path: string): string {
+  return `${publicEnv().NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/public-media/${path.split("/").map(encodeURIComponent).join("/")}`;
+}
+
+/** Live announcements, urgent first, then newest. RLS hides unpublished and expired ones. */
+export async function getAnnouncements(opts: { eventId?: string; limit?: number } = {}): Promise<Announcement[]> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("announcements");
+  if (!isSupabaseConfigured()) return [];
+  let q = createPublicClient()
+    .from("announcements")
+    .select("id, title, body_markdown, event_id, priority, publish_at, expires_at, send_email, email_audience, emailed_at, email_recipient_count")
+    .is("deleted_at", null)
+    .order("publish_at", { ascending: false })
+    .limit(opts.limit ?? 50);
+  if (opts.eventId) q = q.eq("event_id", opts.eventId);
+  const { data } = await q;
+  const rows = (data ?? []) as Announcement[];
+  return rows.sort((a, b) => (a.priority === b.priority ? b.publish_at.localeCompare(a.publish_at) : a.priority === "urgent" ? -1 : 1));
+}
+
+export async function getSponsors(): Promise<Sponsor[]> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("sponsors");
+  if (!isSupabaseConfigured()) return [];
+  const { data } = await createPublicClient()
+    .from("sponsors")
+    .select("id, name, logo_path, url, tier, sort_order, is_active")
+    .eq("is_active", true)
+    .is("deleted_at", null)
+    .order("sort_order");
+  return (data ?? []) as Sponsor[];
+}
+
+/** Race window for weather: first start to the last finish (duration plus about 3 minutes a lap). */
+export function raceWindow(categories: Pick<EventCategory, "start_at" | "duration_minutes" | "laps">[]): { start: string; end: string } | null {
+  if (categories.length === 0) return null;
+  const starts = categories.map((c) => new Date(c.start_at).getTime());
+  const ends = categories.map((c) => new Date(c.start_at).getTime() + (c.duration_minutes + (c.laps ?? 0) * 3) * 60_000);
+  return { start: new Date(Math.min(...starts)).toISOString(), end: new Date(Math.max(...ends)).toISOString() };
+}
+
+export const SPONSOR_TIERS: { key: string; label: string }[] = [
+  { key: "presenting", label: "Presenting sponsor" },
+  { key: "gold", label: "Gold sponsors" },
+  { key: "silver", label: "Silver sponsors" },
+  { key: "supporter", label: "Supporters" },
+];

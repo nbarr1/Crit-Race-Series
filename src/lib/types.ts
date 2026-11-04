@@ -69,6 +69,7 @@ export interface RaceEvent {
   status: EventStatus;
   notes: string;
   weather_override_text: string | null;
+  course_map_id?: string | null;
 }
 
 export interface Availability {
@@ -78,4 +79,37 @@ export interface Availability {
   registered_count: number;
   waitlist_count: number;
   spots_left: number;
+}
+
+export type MediaType = "course_map" | "image" | "pdf" | "gpx";
+export interface Media {
+  id: string;
+  type: MediaType;
+  storage_path: string;
+  caption: string;
+  event_id: string | null;
+}
+
+export interface Announcement {
+  id: string;
+  title: string;
+  body_markdown: string;
+  event_id: string | null;
+  priority: "normal" | "urgent";
+  publish_at: string;
+  expires_at: string | null;
+  send_email: boolean;
+  email_audience: "event_registrants" | "season" | null;
+  emailed_at: string | null;
+  email_recipient_count: number | null;
+}
+
+export interface Sponsor {
+  id: string;
+  name: string;
+  logo_path: string | null;
+  url: string | null;
+  tier: string;
+  sort_order: number;
+  is_active: boolean;
 }
