@@ -52,3 +52,21 @@ begin
 end $$;
 
 grant execute on all functions in schema tests to anon, authenticated, service_role;
+
+-- Like tests.throws, but the error message must match a pattern, so a test
+-- can't pass because of an unrelated error.
+create or replace function tests.throws_like(statement text, pattern text, description text) returns void
+language plpgsql as $$
+begin
+  begin
+    execute statement;
+  exception when others then
+    if sqlerrm ~ pattern then
+      raise notice 'ok - % (%)', description, sqlerrm;
+      return;
+    end if;
+    raise exception 'not ok - % (expected error matching "%", got %: %)', description, pattern, sqlstate, sqlerrm;
+  end;
+  raise exception 'not ok - % (statement succeeded: %)', description, statement;
+end $$;
+grant execute on all functions in schema tests to anon, authenticated, service_role;

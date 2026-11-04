@@ -68,3 +68,11 @@ export function racingAge(birthDate: string, seasonYear: number): number {
 export function formatCents(cents: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 }
+
+/**
+ * Current time for server components, which render once per request (the
+ * page has already opted into request-time rendering through connection()).
+ */
+export function nowMs(): number {
+  return Date.now();
+}

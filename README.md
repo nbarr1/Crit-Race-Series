@@ -7,7 +7,7 @@ The app is built in six phases (see the build prompt). This README describes wha
 | Phase | Scope | Status |
 |---|---|---|
 | 1. Foundation | Schema, row-level security, auth, onboarding, schedule, seed data | Done |
-| 2. Registration and waivers | Registration flow, waiver signing and PDFs, Stripe, waitlist, email | Not started |
+| 2. Registration and waivers | Registration flow, waiver signing and PDFs, Stripe, waitlist, email | Done |
 | 3. Check-in | Staff roster, QR scanning, walk-ups, offline queue, start lists | Not started |
 | 4. Event information | Home page, weather, announcements, sponsors, calendar files | Not started |
 | 5. Results and standings | CSV upload and matching, publishing, points engine | Not started |
@@ -22,7 +22,8 @@ For every assumption and trade-off, see [DECISIONS.md](DECISIONS.md).
 - Supabase: Postgres, Auth (email one-time code and magic link, optional Google), Storage, and row-level security
 - Zod 4 for server-side validation
 - Vitest for unit tests, Playwright for end-to-end tests, and plain SQL tests for row-level security
-- Planned for later phases: Stripe Checkout, Resend, Open-Meteo, and the National Weather Service API
+- Stripe Checkout and webhooks for payments, Resend for email, and pdf-lib for signed waiver PDFs
+- Planned for later phases: Open-Meteo and the National Weather Service API
 
 ## Project layout
 
@@ -74,7 +75,7 @@ Prerequisites: Node.js 22 or later, and a Supabase project (hosted, or local thr
    npm run dev
    ```
 
-Without Supabase settings, the app still starts and shows a setup notice in place of data.
+Without Supabase settings, the app still starts and shows a setup notice in place of data. Without Resend settings, emails are written to the server log instead of sent.
 
 ### Configure Supabase Auth
 
@@ -87,6 +88,36 @@ In the Supabase dashboard, under **Authentication**:
 5. Optional: to turn on Google sign-in, enable the Google provider and set `NEXT_PUBLIC_GOOGLE_AUTH_ENABLED=true`.
 
 The local CLI stack reads these settings from `supabase/config.toml`.
+
+### Configure Stripe
+
+1. In the [Stripe dashboard](https://dashboard.stripe.com), switch to test mode and copy the secret key into `STRIPE_SECRET_KEY`.
+2. For local development, forward webhooks with the [Stripe CLI](https://docs.stripe.com/stripe-cli):
+
+   ```bash
+   stripe listen --forward-to localhost:3000/api/stripe/webhook
+   ```
+
+   Copy the signing secret it prints (`whsec_...`) into `STRIPE_WEBHOOK_SECRET`.
+3. For a deployed site, add a webhook endpoint at `<site URL>/api/stripe/webhook` with these events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired`, and `checkout.session.async_payment_failed`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
+4. Pay with the test card `4242 4242 4242 4242`, any future expiry date, and any CVC.
+
+To run the series without online payments, set `payments_enabled` to `false` in the `app_settings` table. Priced races then confirm right away, and riders pay at the desk.
+
+### Configure Resend
+
+1. Verify a sending domain in [Resend](https://resend.com/domains).
+2. Set `RESEND_API_KEY`, and set `EMAIL_FROM` to an address on that domain. `EMAIL_REPLY_TO` is optional.
+
+The app sends registration and waitlist confirmations, waitlist promotions, cancellations, season pass confirmations, and signed waiver PDFs.
+
+### Scheduled job
+
+`/api/cron/registrations` releases expired payment holds, emails riders promoted from the waitlist, and retries waiver PDFs and emails that failed. `vercel.json` runs it every 15 minutes, which needs a paid Vercel plan (Hobby runs cron jobs once a day). Set `CRON_SECRET` in Vercel. Vercel sends it as a bearer token, and the route rejects requests without it. To run it by hand:
+
+```bash
+curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/registrations
+```
 
 ## Seed data
 
@@ -134,9 +165,21 @@ The tests cover, among other things:
 - Staff can check riders in and edit profiles, and those writes land in the audit log with before and after values.
 - Waiver signatures and the audit log are append-only. Published waiver text can't be edited.
 
+The registration tests (`supabase/tests/registration.test.sql`) cover the waiver requirement, the registration window, payment holds and their expiry, capacity and the waitlist, cancellation and promotion, eligibility warnings, payments off, minors, season passes, Stripe confirmation idempotency, and new waiver versions.
+
 ### End-to-end tests
 
-Phase 1's Playwright tests need no database: they check the public shell, sign-in form validation, the signed-out redirect, and tap target size. Flows that need Supabase (registration, check-in, results) arrive with their phases.
+The Playwright tests need no database. They check the public shell, sign-in form validation, signed-out redirects from rider pages, that the Stripe webhook rejects unsigned requests, that the scheduled job requires its secret, and tap target size. Flows that need a live Supabase project and Stripe test mode (signing in, paying, check-in) aren't covered yet. Verify those by hand with the steps in "Try the registration flow."
+
+### Try the registration flow
+
+With Supabase, Stripe test mode, and the seed data in place:
+
+1. Sign in with a real email and complete onboarding.
+2. Open a race from the schedule and select **Register**.
+3. Sign the waiver when asked. A PDF copy arrives by email.
+4. Pay with the test card. You land on the confirmation page, and a confirmation email arrives.
+5. To see the waitlist, set a category's `capacity` to its current count in the `event_categories` table, then register a second account for it.
 
 ## Deploy
 
@@ -153,10 +196,11 @@ Phase 1's Playwright tests need no database: they check the public shell, sign-i
 1. Import the repository in Vercel. The framework preset is Next.js.
 2. Add the environment variables from `.env.example` for the Production and Preview environments. Set `NEXT_PUBLIC_SITE_URL` to the production URL.
 3. Deploy, then add the production URL to Supabase's Auth redirect URLs.
+4. Add the Stripe webhook endpoint (see "Configure Stripe") using live keys when you're ready to take real payments.
 
 ## Environment variables
 
-Every variable is listed with a description in [.env.example](.env.example). The app needs only the three Supabase values and `NEXT_PUBLIC_SITE_URL` in phase 1. Variables for Stripe, Resend, weather, and scheduled jobs are listed ahead of the phases that use them.
+Every variable is listed with a description in [.env.example](.env.example). Registration needs the Supabase values, `NEXT_PUBLIC_SITE_URL`, the Stripe keys (when payments are on), the Resend values (to send email), and `CRON_SECRET`. The weather variable is used in phase 4.
 
 ## Staff guide
 

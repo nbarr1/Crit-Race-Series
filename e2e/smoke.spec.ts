@@ -19,9 +19,21 @@ test("sign-in form is labeled and validates email", async ({ page }) => {
   await expect(page.getByText("Enter a valid email address.")).toBeVisible();
 });
 
-test("rider pages send signed-out visitors to sign in", async ({ page }) => {
-  await page.goto("/my-races");
-  await expect(page).toHaveURL(/\/sign-in\?next=%2Fmy-races/);
+for (const path of ["/my-races", "/register", "/waiver", "/season-pass"]) {
+  test(`${path} sends signed-out visitors to sign in`, async ({ page }) => {
+    await page.goto(path);
+    await expect(page).toHaveURL(new RegExp(`/sign-in\\?next=${encodeURIComponent(path)}`));
+  });
+}
+
+test("the Stripe webhook rejects unsigned requests", async ({ request }) => {
+  const res = await request.post("/api/stripe/webhook", { data: { type: "checkout.session.completed" } });
+  expect(res.status()).toBe(400);
+});
+
+test("the scheduled job requires its secret", async ({ request }) => {
+  const res = await request.get("/api/cron/registrations");
+  expect(res.status()).toBe(401);
 });
 
 test("tap targets are at least 44px tall", async ({ page }) => {

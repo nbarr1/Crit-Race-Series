@@ -11,9 +11,9 @@ These decisions belong to the organizers. Each one is a row in the `app_settings
 | Weekly or every two weeks | Staff enter each date by hand | `events.event_date` (setting `schedule_cadence_note` is informational) |
 | Online payments | On (Stripe), with an off switch | `app_settings.payments_enabled` |
 | Per-race, walk-up, and season pass prices | Placeholders ($25, $30, $200). Admin must set them. | `event_categories.price_cents`, `walk_up_price_cents`, `seasons.season_pass_price_cents`, plus defaults in `app_settings` |
-| Refund policy | No automatic refunds | `app_settings.refund_policy` |
+| Refund policy | No automatic refunds | `app_settings.refund_policy` (`no_automatic_refunds` or `full_refund_before_close`) |
 | USA Cycling license required | Optional field, not enforced | `app_settings.usac_license_required` |
-| Masters minimum age | 40, warning only | `app_settings.masters_min_age`, `categories.min_age` |
+| Masters minimum age | 40, warning only | `categories.min_age` on the Masters category (D-063) |
 | Riders under 18 allowed | Yes, with guardian signature | `app_settings.minors_allowed` |
 | Category capacity | 60 per category | `event_categories.capacity`, `app_settings.default_category_capacity` |
 | Points table and dropped races | Section 5.6 table, no dropped races | `points_rules` |
@@ -99,6 +99,52 @@ USA Cycling integration point: if the series is sanctioned, the sanctioning body
 
 **D-042. The sample waiver is placeholder text.** It's marked as sample text and needs a lawyer's review.
 
+## Phase 2: registration and waivers
+
+### Registration rules
+
+**D-050. Registration rules live in one database function.** `register_for_event_categories()` checks the profile, the registration window, the current waiver signature, duplicates, eligibility, and capacity, and then creates every selected registration in one transaction. It locks the event category rows in a fixed order, so two riders racing for the last spot can't both get it and concurrent multi-race registrations can't deadlock. Errors are stable codes (for example, `waiver_required`), which `src/lib/messages.ts` turns into sentences.
+
+**D-051. Unpaid registrations hold a spot for 35 minutes.** With payments on, a priced registration starts as `pending_payment` and counts toward capacity until `pending_expires_at`. Stripe Checkout sessions last 30 minutes, the shortest Stripe allows. When a session starts, the hold is extended to the session's expiry plus 5 minutes, so a payment finished at the last second still lands on a held spot. Expired holds are released by the scheduled job and before each registration in that category. A payment that arrives after its hold expired gets the spot back if one is free. Otherwise, the registration is marked for staff to refund by hand.
+
+**D-052. The waitlist is first come, first served, and riders pay only when promoted.** Waitlisted registrations aren't charged. When a spot opens (a cancellation or an expired hold), the next rider is promoted. In a free category, or with payments off, they're confirmed. Otherwise, they get a 24-hour offer (`waitlist_offer_hours`) as `pending_payment`. If they don't pay, the spot moves to the next rider. Promotions are queued in the database (`promoted_at`, `promotion_notified_at`) and emailed by whichever code runs next, so no promotion goes unannounced if an email fails.
+
+**D-053. Season pass holders are guaranteed a spot.** A pass is priced per category (`seasons.season_pass_price_cents` times the number of categories). It registers the rider for every upcoming published event in those categories, including full races and races whose online registration has closed, and registers them automatically for events published later. Pass registrations count toward capacity but aren't blocked by it. Passes need online payments. With payments off, they aren't sold, and staff can comp riders at the desk instead.
+
+**D-054. Minors are identified on the signing date.** A rider under 18 on the day they sign needs a parent or guardian name, relationship, agreement checkbox, and typed signature on the same form. Riders must type their name as it appears on their profile, compared without case or punctuation. The guardian's typed signature must match the guardian's name. When `minors_allowed` is off, riders under 18 on race day can't register.
+
+**D-055. Refunds follow the admin's policy.** The default `no_automatic_refunds` cancels the registration and tells the rider the organizers will follow up. With `full_refund_before_close`, canceling before registration closes refunds the amount paid for that race through Stripe automatically. Waitlisted and unpaid registrations were never charged, so they need no refund.
+
+**D-056. With payments off, riders pay at the desk.** Priced registrations confirm immediately with `payment_method = 'none'`, and check-in (phase 3) shows them as unpaid.
+
+**D-057. Eligibility warnings need the rider's acknowledgment.** When a selection has warnings (for example, under the Masters age), the rider sees them and must check a box to continue. The warning codes are stored on the registration for staff to review at check-in, where staff can record an override (phase 3). An expired USA Cycling license is a warning. Hard requirements raise errors instead: `usac_license_required` blocks riders without a license number, and `minors_allowed = false` blocks riders under 18.
+
+### Payments
+
+**D-058. The confirmation page doesn't wait for the webhook.** After Checkout, the confirmation page fetches the session from Stripe, checks that it belongs to the signed-in rider (`metadata.profile_id`), and applies it. The webhook does the same. Both paths are idempotent, so whichever arrives first confirms the registration and the other does nothing.
+
+**D-059. One registration can't be paid for twice.** Paying again from My races expires the rider's previous Checkout session for those registrations before creating a new one.
+
+**D-060. Webhooks are verified, and a failure makes Stripe retry.** The webhook verifies Stripe's signature with `STRIPE_WEBHOOK_SECRET` and handles `checkout.session.completed`, `async_payment_succeeded`, `expired`, and `async_payment_failed`. If a handler fails, it returns HTTP 500, so Stripe retries.
+
+### Waivers and email
+
+**D-061. Signed PDFs are generated on the server and stored privately.** The PDF (pdf-lib, standard Helvetica) contains the waiver text, version, typed signatures, time in Eastern and UTC, IP address, user agent, guardian details, and signature ID. It's stored at `waivers/<profile id>/<signature id>.pdf`, which only the rider and staff can read. Downloads use signed links that expire in 2-5 minutes. Characters outside the font's character set are replaced with "?" in the PDF only. The signature itself stores the original text.
+
+**D-062. PDF generation and email can fail without losing the signature.** The signature is recorded first. If the PDF or email fails, the scheduled job retries signatures from the last three days that lack a PDF, or lack an email to a rider who has an address.
+
+**D-063. Masters minimum age has one source.** The phase 1 `masters_min_age` setting duplicated `categories.min_age`, so it was removed. Admins change the Masters category's minimum age.
+
+**D-064. Waiver Markdown is rendered without raw HTML.** react-markdown ignores embedded HTML, so waiver text can't inject markup into the page.
+
+**D-065. Email skips reserved domains, and runs without Resend in development.** Messages to reserved domains (`.test`, `.example`, `.invalid`, `.localhost`, and `example.com/net/org`) are logged, not sent, so seeded riders can't cause bounces. Without `RESEND_API_KEY`, every message is logged. Resend idempotency keys prevent duplicate sends when a step retries.
+
+**D-066. The signer's IP address comes from `x-forwarded-for`.** Vercel sets this header. On other hosts, configure the proxy to set it, or the recorded IP address could be spoofed.
+
+### Operations
+
+**D-067. A scheduled job runs every 15 minutes.** `vercel.json` schedules `/api/cron/registrations`, which Vercel calls with `CRON_SECRET`. Vercel's Hobby plan runs cron jobs at most once a day, so a 15-minute schedule needs a paid plan. On Hobby, expired holds are still released whenever someone registers for that category, but promotion emails and PDF retries wait for the daily run. A free alternative is to call the URL from another scheduler with the same bearer token.
+
 ## Open questions for the organizers
 
 These don't block the build, but the answers change settings or copy:
@@ -108,3 +154,5 @@ These don't block the build, but the answers change settings or copy:
 3. Whether the series will be sanctioned by USA Cycling, which may bring its own waiver and license requirements.
 4. Start times, race lengths, and the actual event dates.
 5. The sender email domain for Resend.
+6. Whether to refund automatically when riders cancel before registration closes (`refund_policy`).
+7. Whether to sell a season pass, and its price per category.

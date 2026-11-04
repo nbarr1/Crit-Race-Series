@@ -4,9 +4,11 @@ import { PageLoading } from "@/components/page-loading";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { eventPhase, getEvent } from "@/lib/data";
-import { formatCents, formatDateTime, formatEventDate, formatTime, todayInDisplayTz } from "@/lib/time";
+import { formatCents, formatDateTime, formatEventDate, formatTime, nowMs, todayInDisplayTz } from "@/lib/time";
 import { Alert, Card } from "@/components/ui/card";
 import { EventStatusBadge } from "@/components/event-status-badge";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -20,6 +22,11 @@ async function EventDetailView({ params }: Props) {
   if (!event) notFound();
   await connection();
   const phase = eventPhase(event, todayInDisplayTz());
+  const now = nowMs();
+  const registrationOpen =
+    event.status === "published" &&
+    now >= new Date(event.registration_opens_at).getTime() &&
+    now < new Date(event.registration_closes_at).getTime();
   const venue = event.venues;
   const directions = venue
     ? `https://www.google.com/maps/dir/?api=1&destination=${venue.latitude},${venue.longitude}`
@@ -40,6 +47,15 @@ async function EventDetailView({ params }: Props) {
           Online registration closes {formatDateTime(event.registration_closes_at)}. After that, register at the desk on
           race day.
         </p>
+        {phase === "upcoming" || phase === "today" ? (
+          registrationOpen ? (
+            <Link href={`/register?event=${event.id}`} className={buttonVariants({ size: "lg" })}>
+              Register for {event.name}
+            </Link>
+          ) : now < new Date(event.registration_opens_at).getTime() ? (
+            <p className="font-semibold">Online registration opens {formatDateTime(event.registration_opens_at)}.</p>
+          ) : null
+        ) : null}
       </header>
 
       <section aria-labelledby="categories-heading" className="space-y-3">

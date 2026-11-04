@@ -32,8 +32,11 @@ async function NextRace() {
             {firstStart ? ` · First race ${formatTime(firstStart)}` : null}
           </p>
           <div className="flex flex-wrap gap-2">
-            <Link href={`/events/${next.id}`} className={buttonVariants({ size: "lg" })}>
+            <Link href={`/events/${next.id}`} className={buttonVariants({ variant: "secondary", size: "lg" })}>
               Race details
+            </Link>
+            <Link href={`/register?event=${next.id}`} className={buttonVariants({ size: "lg" })}>
+              Register
             </Link>
             <Link href="/schedule" className={buttonVariants({ variant: "secondary", size: "lg" })}>
               Full schedule

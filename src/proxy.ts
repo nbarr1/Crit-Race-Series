@@ -6,7 +6,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * visitors away from rider-only pages. Authorization itself happens in the
  * database (RLS) and in each server action; this is only an optimistic check.
  */
-const RIDER_ONLY = ["/profile", "/onboarding", "/my-races", "/staff", "/admin"];
+const RIDER_ONLY = ["/profile", "/onboarding", "/my-races", "/register", "/waiver", "/season-pass", "/staff", "/admin"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

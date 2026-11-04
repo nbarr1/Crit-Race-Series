@@ -43,7 +43,7 @@ export type EventDetail = RaceEvent & {
 export async function getEvent(id: string): Promise<EventDetail | null> {
   "use cache";
   cacheLife("minutes");
-  cacheTag("events", `event:${id}`);
+  cacheTag("events", `event:${id}`, "registrations");
   if (!isSupabaseConfigured()) return null;
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const supabase = createPublicClient();
@@ -71,4 +71,87 @@ export function eventPhase(e: Pick<RaceEvent, "status" | "event_date">, today: s
   if (e.status === "completed" || e.event_date < today) return "completed";
   if (e.event_date === today) return "today";
   return "upcoming";
+}
+
+export type Season = { id: string; name: string; year: number; season_pass_price_cents: number | null };
+
+export async function getActiveSeason(): Promise<Season | null> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("seasons");
+  if (!isSupabaseConfigured()) return null;
+  const { data } = await createPublicClient()
+    .from("seasons")
+    .select("id, name, year, season_pass_price_cents")
+    .eq("is_active", true)
+    .maybeSingle();
+  return (data as Season | null) ?? null;
+}
+
+export type WaiverVersion = {
+  id: string;
+  season_id: string;
+  version_number: number;
+  title: string;
+  body_markdown: string;
+  effective_date: string;
+  external_waiver_url: string | null;
+};
+
+export async function getCurrentWaiver(seasonId: string): Promise<WaiverVersion | null> {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("waivers");
+  if (!isSupabaseConfigured()) return null;
+  const { data } = await createPublicClient()
+    .from("waiver_versions")
+    .select("id, season_id, version_number, title, body_markdown, effective_date, external_waiver_url")
+    .eq("season_id", seasonId)
+    .eq("is_current", true)
+    .maybeSingle();
+  return (data as WaiverVersion | null) ?? null;
+}
+
+export type OpenRace = {
+  event: Pick<RaceEvent, "id" | "name" | "event_date" | "registration_closes_at">;
+  categories: (EventCategory & { spots_left: number; waitlist_count: number })[];
+};
+
+/** Events in the active season that are open for online registration now. */
+export async function getOpenRaces(): Promise<OpenRace[]> {
+  "use cache";
+  cacheLife("seconds");
+  cacheTag("events", "registrations");
+  if (!isSupabaseConfigured()) return [];
+  const supabase = createPublicClient();
+  const season = await getActiveSeason();
+  if (!season) return [];
+  const nowIso = new Date().toISOString();
+  const { data } = await supabase
+    .from("events")
+    .select(
+      "id, name, event_date, registration_closes_at, event_categories(id, event_id, category_id, start_at, duration_minutes, laps, capacity, price_cents, walk_up_price_cents, categories(name, sort_order, description, eligibility_notes))",
+    )
+    .eq("season_id", season.id)
+    .eq("status", "published")
+    .is("deleted_at", null)
+    .lte("registration_opens_at", nowIso)
+    .gt("registration_closes_at", nowIso)
+    .order("event_date");
+  const events = (data ?? []) as unknown as (OpenRace["event"] & { event_categories: EventCategory[] })[];
+  const ids = events.map((e) => e.id);
+  const { data: avail } = ids.length
+    ? await supabase.from("event_category_availability").select("*").in("event_id", ids)
+    : { data: [] };
+  const byEc = new Map(((avail ?? []) as Availability[]).map((a) => [a.event_category_id, a]));
+  return events.map(({ event_categories, ...event }) => ({
+    event,
+    categories: event_categories
+      .sort((a, b) => a.categories.sort_order - b.categories.sort_order)
+      .map((ec) => ({
+        ...ec,
+        spots_left: byEc.get(ec.id)?.spots_left ?? ec.capacity,
+        waitlist_count: byEc.get(ec.id)?.waitlist_count ?? 0,
+      })),
+  }));
 }
