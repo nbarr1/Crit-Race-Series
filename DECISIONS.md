@@ -201,7 +201,7 @@ USA Cycling integration point: if the series is sanctioned, the sanctioning body
 
 **D-098. Calendar files use UTC and stable IDs.** The season file (`/schedule/calendar.ics`) and each event's file use UTC times, so calendar apps convert them to the reader's time zone. Each event's `UID` is stable, so a canceled event updates the existing calendar entry (`STATUS:CANCELLED`) instead of adding a new one.
 
-**D-099. Images are plain `<img>` tags.** Course maps and sponsor logos come from storage at sizes that aren't known ahead of time. They load lazily below the fold, and the map links to its full-size file. Next.js image optimization would need the storage host configured at build time. It's worth revisiting if the Lighthouse pass in phase 6 flags these images.
+**D-099. Images are plain `<img>` tags.** Course maps and sponsor logos come from storage at sizes that aren't known ahead of time. They load lazily below the fold, and the map links to its full-size file. Next.js image optimization would need the storage host configured at build time. The phase 6 Lighthouse pass didn't flag them (D-123).
 
 ## Phase 5: results and standings
 
@@ -254,6 +254,8 @@ The build prompt wasn't available in the session that built this phase either. T
 **D-121. The activity log shows the last 100 changes.** It reads `audit_log` (admins only, D-024) with the actor's name, the kind of row, and which fields changed. It doesn't show the values, which can include private details such as emergency contacts.
 
 **D-122. Accessibility is checked automatically.** The data-backed end-to-end tests run axe-core against the admin dashboard, the event list and form, settings, staff and admins, the emergency contact sheet, and the main public pages, and fail on any WCAG 2.1 A or AA violation. Automated checks find a share of problems, not all of them. A pass with a screen reader (VoiceOver on iOS and TalkBack on Android) is still worth doing before launch.
+
+**D-123. Lighthouse pass.** Lighthouse 13.5 (mobile, simulated slow 4G) ran against a production build with the seed data, on the home, schedule, event, standings, and sign-in pages. It found two problems. Content streaming in under `<Suspense>` pushed the footer (and, on the home page, the sponsor strip) down, a layout shift of about 0.15. The main area now has a minimum height of one screen, and the home page's "next race" placeholder holds the card's space, which brings the shift to 0.02 or less. Event pages had no meta description, and now describe the race. After the fixes, every page scored 100 for accessibility, best practices, and SEO except the event page's SEO before its description was added, and 93 to 96 for performance (largest contentful paint 2.1 to 2.7 seconds). Sponsor logos and course maps stay plain `<img>` tags (D-099), since Lighthouse didn't flag them. Scores from a test server aren't the live site's. Run Lighthouse again against the deployed site, where Supabase and Vercel response times apply.
 
 ## Open questions for the organizers
 

@@ -19,7 +19,11 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const event = await getEvent((await params).id);
-  return { title: event?.name ?? "Event" };
+  if (!event) return { title: "Event" };
+  return {
+    title: event.name,
+    description: `${event.name}, ${formatEventDate(event.event_date)}: race times, registration, weather, course map, and results.`,
+  };
 }
 
 async function EventDetailView({ params }: Props) {
