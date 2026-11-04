@@ -113,7 +113,7 @@ The app sends registration and waitlist confirmations, waitlist promotions, canc
 
 ### Scheduled job
 
-`/api/cron/registrations` releases expired payment holds, emails riders promoted from the waitlist, and retries waiver PDFs and emails that failed. `vercel.json` runs it every 15 minutes, which needs a paid Vercel plan (Hobby runs cron jobs once a day). Set `CRON_SECRET` in Vercel. Vercel sends it as a bearer token, and the route rejects requests without it. To run it by hand:
+`/api/cron/registrations` releases expired payment holds, emails riders promoted from the waitlist, and retries waiver PDFs and emails that failed. `vercel.json` runs it once a day at 11:00 UTC (7:00 a.m. Eastern daylight time, 6:00 a.m. standard time), the most often Vercel's Hobby plan allows. Riders who cancel free up their spot right away, and announcements posted for now email right away, so the daily run only delays promotions from expired payment holds, emails for scheduled announcements, and retries of failed waiver PDFs and emails. For a shorter delay, see DECISIONS.md D-067. Set `CRON_SECRET` in Vercel. Vercel sends it as a bearer token, and the route rejects requests without it. To run it by hand:
 
 ```bash
 curl -H "Authorization: Bearer $CRON_SECRET" http://localhost:3000/api/cron/registrations

@@ -5,7 +5,7 @@ import { finalizeSignature } from "@/lib/waiver-service";
 import { emailDueAnnouncements } from "@/lib/announcement-service";
 
 /**
- * Scheduled every 15 minutes (vercel.json). Releases expired unpaid holds,
+ * Scheduled once a day at 11:00 UTC (vercel.json, DECISIONS.md D-067). Releases expired unpaid holds,
  * emails riders promoted from the waitlist, retries waiver PDFs and emails
  * that failed the first time, and emails scheduled announcements. Vercel Cron sends CRON_SECRET as a bearer token.
  */
