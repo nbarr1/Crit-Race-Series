@@ -34,6 +34,11 @@ async function StaffHome() {
       {profile.role === "admin" ? (
         <ul className="list-disc space-y-1 pl-5">
           <li>
+            <Link href="/admin" className="font-semibold text-primary underline">
+              Admin: seasons, events, prices, settings, and staff
+            </Link>
+          </li>
+          <li>
             <Link href="/admin/waivers" className="font-semibold text-primary underline">
               Waivers: publish versions and export signatures
             </Link>

@@ -2,7 +2,7 @@
 
 A mobile-first web app for a summer criterium race series at Connestee Nature Park: online registration, waivers, race-day check-in, event information, results, and series standings.
 
-The app is built in six phases (see the build prompt). This README describes what exists so far.
+The app was built in six phases (see the build prompt). This README describes what exists.
 
 | Phase | Scope | Status |
 |---|---|---|
@@ -11,7 +11,7 @@ The app is built in six phases (see the build prompt). This README describes wha
 | 3. Check-in | Staff roster, QR scanning, walk-ups, offline queue, start lists | Done |
 | 4. Event information | Home page, weather, announcements, sponsors, calendar files | Done |
 | 5. Results and standings | CSV upload and matching, publishing, points engine, standings | Done |
-| 6. Admin and polish | Dashboard, CRUD screens, exports, accessibility and Lighthouse passes | Not started |
+| 6. Admin and polish | Dashboard, CRUD screens, exports, accessibility and Lighthouse passes | Done |
 
 For every assumption and trade-off, see [DECISIONS.md](DECISIONS.md).
 
@@ -102,7 +102,7 @@ The local CLI stack reads these settings from `supabase/config.toml`.
 3. For a deployed site, add a webhook endpoint at `<site URL>/api/stripe/webhook` with these events: `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `checkout.session.expired`, and `checkout.session.async_payment_failed`. Copy its signing secret into `STRIPE_WEBHOOK_SECRET`.
 4. Pay with the test card `4242 4242 4242 4242`, any future expiry date, and any CVC.
 
-To run the series without online payments, set `payments_enabled` to `false` in the `app_settings` table. Priced races then confirm right away, and riders pay at the desk.
+To run the series without online payments, clear **Take online payments through Stripe** under **Admin > Settings**. Priced races then confirm right away, and riders pay at the desk.
 
 ### Configure email
 
@@ -140,6 +140,25 @@ Staff manage the following from the **Staff** page:
 
 Uploads are limited to 4 MB (DECISIONS.md D-094).
 
+## Admin screens
+
+Admins open **Admin** from the **Staff** page (`/admin`). Every change goes through a database function that checks the admin role, and lands in the activity log with the admin's name (DECISIONS.md D-110).
+
+| Screen | What it does |
+|---|---|
+| Dashboard | Riders registered, current waiver signers, money taken, season passes, upcoming events with counts, and a setup list (active season, drafts, waiver, placeholder prices, venue, staff) |
+| Events and prices | Add an event with its categories, start times, lengths, laps, capacities, and online and walk-up prices. Publish, cancel, or delete it, and copy it to another date. Export registrations as CSV for one event or the season. |
+| Seasons | Create a season, set its season pass price and points table, and make it the active season |
+| Categories | Add categories, and edit descriptions, eligibility notes, the minimum racing age, and the order |
+| Points | Edit points by place and dropped races. Saving rescores results. |
+| Venue | Confirm the address and coordinates, and edit parking notes |
+| Settings | Every row of `app_settings`: payments, refund policy, license and minor rules, defaults for new events and seasons |
+| Staff and admins | Find people by name or email and set their role |
+| Waivers | Publish waiver versions and export signatures (phase 2) |
+| Activity log | The 100 most recent changes, filterable by kind |
+
+To set up a new season: create it under **Seasons**, add its first event under **Events and prices** (new events start from the season's latest event, or from the default prices in **Settings**), copy that event to the other dates, publish the waiver, make the season active, and publish the events.
+
 ## Seed data
 
 ```bash
@@ -153,11 +172,13 @@ The seed script creates one active season ("2027 Connestee Crit Series"), 10 Wed
 - The script stops without changes if the demo season already exists.
 - It uses the secret (service role) key, so point it only at a development or demo project.
 
-To make an existing account an admin without seeding, run this in the Supabase SQL editor:
+The first admin has to be set in the database, because only an admin can make someone an admin. Sign in once with that email, then run this in the Supabase SQL editor:
 
 ```sql
 update public.profiles set role = 'admin' where email = 'you@example.com';
 ```
+
+After that, admins add staff and other admins under **Admin > Staff and admins**.
 
 ## Tests
 
@@ -189,6 +210,8 @@ The tests cover, among other things:
 
 The results tests (`supabase/tests/results.test.sql`) cover who can save and publish, points from the season's table, DNF scoring, duplicate places and riders, drafts staying private, dropped races in the standings view, and rescoring when the points table changes.
 
+The admin tests (`supabase/tests/admin.test.sql`) cover who can call the admin functions, seasons and switching the active one, events saved with their categories, copying across the clock change, removing categories and deleting events riders have registered for, points validation and rescoring, venue and settings validation, roles, and the audit trail.
+
 The registration tests (`supabase/tests/registration.test.sql`) cover the waiver requirement, the registration window, payment holds and their expiry, capacity and the waitlist, cancellation and promotion, eligibility warnings, payments off, minors, season passes, Stripe confirmation idempotency, and new waiver versions.
 
 ### End-to-end tests
@@ -203,6 +226,8 @@ The event information tests check the event page's weather panel, the home page 
 
 The results tests sign in as staff, paste a results sheet for "Race 4" (names only, one written "Last, First," plus an unregistered rider), check the matches, save a draft, confirm it isn't public, publish it, and check the event page and the standings.
 
+The admin tests sign in as an admin, check the dashboard counts, create an event from the season's latest one, publish it, copy and delete a copy, try to delete an event with registrations, turn payments off, make a rider staff, download the registrations CSV, and open the emergency contact sheet as staff. They undo their changes when they finish. They also run [axe-core](https://github.com/dequelabs/axe-core) against the admin pages and the main public pages, and fail on any WCAG 2.1 A or AA problem it finds.
+
 The offline test covers the phase 3 acceptance criterion. With the network turned off, a staff member checks in 20 seeded riders and reloads the page, which reopens from the service worker with all 20 changes still queued. When the network comes back, the test checks that all 20 reached the database with distinct bibs and their offline check-in times.
 
 ### Try the registration flow
@@ -213,7 +238,7 @@ With Supabase, Stripe test mode, and the seed data in place:
 2. Open a race from the schedule and select **Register**.
 3. Sign the waiver when asked. A PDF copy arrives by email.
 4. Pay with the test card. You land on the confirmation page, and a confirmation email arrives.
-5. To see the waitlist, set a category's `capacity` to its current count in the `event_categories` table, then register a second account for it.
+5. To see the waitlist, set a category's capacity to its current count under **Admin > Events and prices**, then register a second account for it.
 
 ## Deploy
 
@@ -222,8 +247,8 @@ With Supabase, Stripe test mode, and the seed data in place:
 1. Create a production project.
 2. Link it and push the migrations: `npx supabase link --project-ref <ref>` and then `npx supabase db push --remote`.
 3. Configure Auth as described in "Configure Supabase Auth."
-4. Make the organizers admins with the SQL in "Seed data." Don't run the seed script against production.
-5. In **Table Editor > venues**, confirm the venue's address and coordinates, and set `coordinates_confirmed` to true.
+4. Make the first organizer an admin with the SQL in "Seed data." Don't run the seed script against production.
+5. Sign in as that admin, open **Admin**, and work through the setup list on the dashboard: create the season, confirm the venue, add the events and prices, publish the waiver, and add staff (see "Admin screens").
 
 ### Vercel
 
@@ -240,16 +265,12 @@ Every variable is listed with a description in [.env.example](.env.example). Reg
 
 Staff open **Staff > Open race-day check-in** (`/staff/check-in`). It opens to today's event (or the next one) and works offline after it has been opened once with a signal. For the volunteer instructions, see [STAFF_GUIDE.md](STAFF_GUIDE.md).
 
-To make a volunteer staff, have them sign in once, then run this in the Supabase SQL editor:
+To make a volunteer staff, have them sign in once, then find them under **Admin > Staff and admins** and choose **Staff**.
 
-```sql
-update public.profiles set role = 'staff' where email = 'volunteer@example.com';
-```
-
-The staff management screen is planned for phase 6.
+Staff can print an emergency contact sheet for each event from **Staff > Event information** (`/staff/events/<id>/emergency`). It's read online only and isn't saved on the device.
 
 ## Results and standings
 
 Staff upload results at **Staff > Results** (`/staff/results`): pick a race and category, upload or paste the officials' CSV, check how each row matched a registered rider, save it as a draft, and publish. Published results appear on the event page, and `/standings` ranks riders in each category. For the steps, see [STAFF_GUIDE.md](STAFF_GUIDE.md). For the CSV columns, matching, points, dropped races, and tiebreakers, see DECISIONS.md D-100 to D-108.
 
-The points table and the number of dropped races live in the `points_rules` table. Editing the table rescores every result in the seasons that use it.
+Admins edit the points table and the number of dropped races under **Admin > Points**. Saving rescores every result in the seasons that use the table.

@@ -53,6 +53,10 @@ A red banner says "Offline" and counts the changes waiting to send. Keep working
 
 At the bottom of the check-in screen, tap **Start list (PDF)** to print, or **Start list (CSV)** for a spreadsheet. Both list confirmed riders by category and bib, with a column showing who's checked in. Start lists need a signal.
 
+## Emergency contacts
+
+Open **Staff**, then **Event information**, pick the event, and tap **Emergency contacts**. The sheet lists every registered rider by last name, with their phone and their emergency contact. Tap a number to call it, or tap **Print** for a paper copy at the first-aid table. The sheet needs a signal and isn't saved on the device. Shred printed copies after the race.
+
 ## Weather and course notes
 
 To warn riders about the course (for example, "Course is wet in turn 3"), open **Staff**, then **Event information**, and pick the event. Type the note under **Weather and course note** and tap **Save**. It shows above the forecast on the event page.

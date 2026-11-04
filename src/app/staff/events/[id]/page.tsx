@@ -43,6 +43,10 @@ async function Manage({ params }: Props) {
         {ev.name}, {formatEventDate(ev.event_date)} ·{" "}
         <Link href={`/events/${ev.id}`} className="font-semibold text-primary underline">
           View the public page
+        </Link>{" "}
+        ·{" "}
+        <Link href={`/staff/events/${ev.id}/emergency`} className="font-semibold text-primary underline">
+          Emergency contacts
         </Link>
       </p>
       <section aria-labelledby="notes-h" className="space-y-3">
