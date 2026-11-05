@@ -3,7 +3,9 @@ import { Badge } from "@/components/ui/card";
 import { formatDateTime } from "@/lib/time";
 import type { Announcement } from "@/lib/types";
 
-export function AnnouncementList({ items }: { items: Announcement[] }) {
+/** headingLevel: 2 when the list sits directly under the page h1, 3 under a section h2. */
+export function AnnouncementList({ items, headingLevel = 3 }: { items: Announcement[]; headingLevel?: 2 | 3 }) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   if (items.length === 0) return <p>No announcements right now.</p>;
   return (
     <ul className="space-y-3">
@@ -15,9 +17,9 @@ export function AnnouncementList({ items }: { items: Announcement[] }) {
           >
             <div className="flex flex-wrap items-center gap-2">
               {a.priority === "urgent" ? <Badge tone="danger">Urgent</Badge> : null}
-              <h3 id={`ann-${a.id}`} className="text-lg font-bold">
+              <Heading id={`ann-${a.id}`} className="text-lg font-bold">
                 {a.title}
-              </h3>
+              </Heading>
             </div>
             <p className="text-sm text-muted-foreground">Posted {formatDateTime(a.publish_at)}</p>
             {a.body_markdown ? (
@@ -35,7 +37,7 @@ export function AnnouncementList({ items }: { items: Announcement[] }) {
 /** The latest urgent announcement, as a banner. */
 export function UrgentBanner({ item }: { item: Announcement }) {
   return (
-    <div role="alert" className="rounded-lg border-l-8 border-destructive bg-destructive/10 p-4">
+    <div role="alert" className="rounded-lg border-2 border-destructive bg-destructive/10 p-4">
       <p className="text-lg font-bold">{item.title}</p>
       {item.body_markdown ? (
         <div className="mt-1 [&_a]:underline [&_strong]:font-bold">

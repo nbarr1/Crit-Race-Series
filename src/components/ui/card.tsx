@@ -34,5 +34,5 @@ export function Alert({
     error: "border-destructive bg-destructive/10",
     success: "border-success bg-success/10",
   } as const;
-  return <div role={tone === "error" ? "alert" : "status"} className={cn("rounded-md border-l-4 p-3", tones[tone], className)} {...props} />;
+  return <div role={tone === "error" ? "alert" : "status"} className={cn("rounded-md border-2 p-3", tones[tone], className)} {...props} />;
 }

@@ -7,7 +7,7 @@ import { PageLoading } from "@/components/page-loading";
 export const metadata: Metadata = { title: "Announcements" };
 
 async function Feed() {
-  return <AnnouncementList items={await getAnnouncements()} />;
+  return <AnnouncementList items={await getAnnouncements()} headingLevel={2} />;
 }
 
 export default function Page() {

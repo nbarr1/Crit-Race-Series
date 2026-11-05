@@ -32,7 +32,7 @@ test("far-off races say the forecast comes later", async ({ page }) => {
 test("the home page shows the urgent announcement, the next race, and sponsors", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("alert").getByText("Course change for Race 4")).toBeVisible();
-  await expect(page.getByText("Next race", { exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Next race: Race 4" })).toBeVisible();
   await expect(page.getByText(/First race in/)).toBeVisible();
   await expect(page.getByRole("region", { name: "Thanks to our sponsors" }).getByText("Ridgeline Bike Shop")).toBeVisible();
 });
