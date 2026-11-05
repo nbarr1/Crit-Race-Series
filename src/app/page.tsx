@@ -31,14 +31,13 @@ async function NextRace() {
 
   return (
     <Card className="space-y-3">
-      <h2 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">Next race</h2>
-      <p className="text-2xl font-bold">{next.name}</p>
+      <h2 className="text-2xl font-bold">Next race: {next.name}</h2>
       <p className="text-lg">
         {formatEventDate(next.event_date)}
         {firstStart ? ` · First race ${formatTime(firstStart)}` : null}
       </p>
       {firstStart ? <Countdown startAt={firstStart} /> : null}
-      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+      <div className="grid gap-2 sm:flex sm:flex-wrap">
         <Link href={`/register?event=${next.id}`} className={buttonVariants({ size: "lg" })}>
           Register
         </Link>

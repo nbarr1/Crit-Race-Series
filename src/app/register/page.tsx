@@ -38,7 +38,7 @@ async function RegisterView({ searchParams }: Props) {
   const initial = selected ? selected.split(",") : [];
 
   if (races.length === 0) {
-    return <p>No races are open for online registration right now. Check the <Link href="/schedule" className="font-semibold text-primary underline">schedule</Link>.</p>;
+    return <p>No races are open for online registration right now. You can still register at the desk on race day. Check the <Link href="/schedule" className="font-semibold text-primary underline">schedule</Link> for dates.</p>;
   }
 
   return (

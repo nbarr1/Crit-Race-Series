@@ -117,7 +117,7 @@ export async function WeatherPanel({
               <dt className="text-sm text-muted-foreground">Chance of rain</dt>
               <dd className="text-xl font-bold">Up to {r(w.maxPrecipitationChance, "%")}</dd>
             </div>
-            <div className="col-span-2 rounded-lg border-2 border-border p-3 sm:col-span-1">
+            <div className="rounded-lg border-2 border-border p-3">
               <dt className="text-sm text-muted-foreground">Wind</dt>
               <dd className="text-xl font-bold">
                 {mainDir !== null ? <WindArrow fromDegrees={mainDir} /> : null} {r(avgWind, " mph")}

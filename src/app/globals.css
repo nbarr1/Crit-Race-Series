@@ -55,6 +55,29 @@ a {
   text-underline-offset: 3px;
 }
 
+/* Headings balance their lines and body copy avoids one-word last lines. */
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p,
+li,
+dd {
+  text-wrap: pretty;
+}
+
+/* Numbers in tables (standings, rosters, weather) line up in columns. */
+table {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
 :focus-visible {
   outline: 3px solid var(--ring);
   outline-offset: 2px;

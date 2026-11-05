@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CircleAlert, CircleCheck } from "lucide-react";
 import { Suspense } from "react";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -74,13 +75,20 @@ async function Dashboard() {
         <h2 id="setup-h" className="text-2xl font-bold">Setup</h2>
         <ul className="space-y-2">
           {todos.map((t) => (
-            <li key={t.text} className="flex flex-wrap items-baseline gap-2">
-              <span aria-hidden="true" className={t.done ? "text-success" : "text-destructive"}>{t.done ? "✓" : "!"}</span>
-              <span className="sr-only">{t.done ? "Done:" : "To do:"}</span>
-              <span>{t.text}</span>
-              <Link href={t.href} className="inline-flex min-h-11 items-center font-semibold text-primary underline">
-                {t.link}
-              </Link>
+            <li key={t.text} className="flex items-start gap-2">
+              {t.done ? (
+                <CircleCheck aria-hidden="true" className="mt-3 size-5 shrink-0 text-success" />
+              ) : (
+                <CircleAlert aria-hidden="true" className="mt-3 size-5 shrink-0 text-destructive" />
+              )}
+              <p className="py-2.5">
+                <span className="sr-only">{t.done ? "Done:" : "To do:"}</span>
+                {t.text}{" "}
+                {/* Inline padding widens the tap target to 44px without breaking the line. */}
+                <Link href={t.href} className="whitespace-nowrap py-2.5 font-semibold text-primary underline">
+                  {t.link}
+                </Link>
+              </p>
             </li>
           ))}
         </ul>
