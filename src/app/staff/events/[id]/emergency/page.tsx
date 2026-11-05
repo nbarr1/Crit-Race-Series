@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { ageOn, formatEventDate } from "@/lib/time";
 import { PageLoading } from "@/components/page-loading";
 import { PrintButton } from "@/components/staff/print-button";
+import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Emergency contacts", robots: { index: false } };
 
@@ -75,7 +76,43 @@ async function Sheet({ params }: Props) {
         <Link href={`/staff/events/${id}`} className="font-semibold text-primary underline">Back to the event</Link>
       </p>
       <PrintButton />
-      <div className="overflow-x-auto">
+      {/* Phones: one card per rider, so the contact's phone number is on screen without scrolling sideways. */}
+      <ul className="space-y-3 sm:hidden print:hidden" aria-label={`Emergency contacts for ${ev.name}, by last name`}>
+        {rows.map((r) => {
+          const minor = r.rider.birth_date ? ageOn(r.rider.birth_date, ev.event_date) < 18 : false;
+          return (
+            <li key={r.rider_id} className="space-y-1 rounded-lg border-2 border-border p-3">
+              <p className="text-lg font-bold">
+                {r.rider.last_name}, {r.rider.first_name}
+                {minor ? <span className="font-normal"> · Under 18</span> : null}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {r.bib_number ? `Bib ${r.bib_number} · ` : ""}
+                {r.categories.join(", ")}
+              </p>
+              <p>
+                <span className="font-semibold">Emergency contact:</span> {r.rider.emergency_contact_name || "None given"}
+                {r.rider.emergency_contact_relationship ? ` (${r.rider.emergency_contact_relationship})` : ""}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {r.rider.emergency_contact_phone ? (
+                  <a href={`tel:${r.rider.emergency_contact_phone}`} className={buttonVariants()}>
+                    Call contact: {r.rider.emergency_contact_phone}
+                  </a>
+                ) : (
+                  <p>No contact phone given.</p>
+                )}
+                {r.rider.phone ? (
+                  <a href={`tel:${r.rider.phone}`} className={buttonVariants({ variant: "secondary" })}>
+                    Call rider: {r.rider.phone}
+                  </a>
+                ) : null}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+      <div className="hidden overflow-x-auto sm:block print:block">
         <table className="w-full text-left text-sm print:text-xs">
           <caption className="sr-only">Emergency contacts for {ev.name}, by last name</caption>
           <thead>
@@ -99,14 +136,14 @@ async function Sheet({ params }: Props) {
                   </th>
                   <td className="py-2 pr-2">{r.bib_number ?? ""}</td>
                   <td className="py-2 pr-2">{r.categories.join(", ")}</td>
-                  <td className="py-2 pr-2 whitespace-nowrap">{r.rider.phone ? <a href={`tel:${r.rider.phone}`} className="underline">{r.rider.phone}</a> : "None given"}</td>
+                  <td className="py-2 pr-2 whitespace-nowrap">{r.rider.phone ? <a href={`tel:${r.rider.phone}`} className="inline-flex min-h-11 items-center underline print:min-h-0">{r.rider.phone}</a> : "None given"}</td>
                   <td className="py-2 pr-2">
                     {r.rider.emergency_contact_name || "None given"}
                     {r.rider.emergency_contact_relationship ? ` (${r.rider.emergency_contact_relationship})` : ""}
                   </td>
                   <td className="py-2 whitespace-nowrap">
                     {r.rider.emergency_contact_phone ? (
-                      <a href={`tel:${r.rider.emergency_contact_phone}`} className="font-semibold underline">{r.rider.emergency_contact_phone}</a>
+                      <a href={`tel:${r.rider.emergency_contact_phone}`} className="inline-flex min-h-11 items-center font-semibold underline print:min-h-0">{r.rider.emergency_contact_phone}</a>
                     ) : (
                       "None given"
                     )}

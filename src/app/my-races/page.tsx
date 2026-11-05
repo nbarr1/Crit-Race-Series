@@ -122,7 +122,7 @@ async function MyRaces({ searchParams }: Props) {
                 <li key={r.id}>
                   <Card className="space-y-2">
                     <h3 className="text-xl font-bold">
-                      <Link className="underline" href={`/events/${ev.id}`}>
+                      <Link className="inline-flex min-h-11 items-center underline" href={`/events/${ev.id}`}>
                         {ev.name}
                       </Link>
                     </h3>

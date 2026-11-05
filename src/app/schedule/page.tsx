@@ -29,10 +29,10 @@ async function ScheduleList() {
             const firstStart = e.event_categories.map((c) => c.start_at).sort()[0];
             return (
               <li key={e.id}>
-                <Card className="flex items-start justify-between gap-3">
+                <Card className="relative flex items-start justify-between gap-3">
                   <div className="space-y-1">
                     <h2 className="text-xl font-bold">
-                      <Link href={`/events/${e.id}`} className="underline">
+                      <Link href={`/events/${e.id}`} className="underline after:absolute after:inset-0 after:rounded-lg after:content-['']">
                         {e.name}
                       </Link>
                     </h2>
