@@ -1,0 +1,280 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-05T20:28:07Z",
+  "title": "Design System: Conestee Crit Series",
+  "extensions": {
+    "colorMeta": {
+      "series-blue": {
+        "role": "primary",
+        "displayName": "Series Blue",
+        "tonalRamp": [
+          "#06264f",
+          "#083873",
+          "#0b4fa8",
+          "#2f6fc4",
+          "#5a8fd3",
+          "#8cb2e2",
+          "#bcd2ef",
+          "#e6eef9"
+        ]
+      },
+      "signal-amber": {
+        "role": "secondary",
+        "displayName": "Signal Amber",
+        "tonalRamp": [
+          "#5c3a03",
+          "#8a5704",
+          "#c07a05",
+          "#f59e0b",
+          "#f8b84a",
+          "#fad086",
+          "#fce4bb",
+          "#fef5e6"
+        ]
+      },
+      "go-green": {
+        "role": "tertiary",
+        "displayName": "Go Green",
+        "tonalRamp": [
+          "#022c1b",
+          "#044a2d",
+          "#067647",
+          "#2c9466",
+          "#5bb08a",
+          "#90cbb0",
+          "#c2e4d4",
+          "#ebf6f0"
+        ]
+      },
+      "stop-red": {
+        "role": "tertiary",
+        "displayName": "Stop Red",
+        "tonalRamp": [
+          "#430d09",
+          "#6e1610",
+          "#b42318",
+          "#cc4a40",
+          "#da776f",
+          "#e7a5a0",
+          "#f2cfcc",
+          "#fbeeed"
+        ]
+      },
+      "caution-yellow": {
+        "role": "tertiary",
+        "displayName": "Caution Yellow",
+        "tonalRamp": [
+          "#5c4400",
+          "#8a6600",
+          "#c29000",
+          "#f5b700",
+          "#f8c93f",
+          "#fad97a",
+          "#fce9b5",
+          "#fef7e3"
+        ]
+      },
+      "ink-navy": {
+        "role": "neutral",
+        "displayName": "Ink Navy"
+      },
+      "paper-white": {
+        "role": "neutral",
+        "displayName": "Paper White"
+      },
+      "slate-note": {
+        "role": "neutral",
+        "displayName": "Slate Note"
+      },
+      "mist": {
+        "role": "neutral",
+        "displayName": "Mist"
+      },
+      "rule-line": {
+        "role": "neutral",
+        "displayName": "Rule Line"
+      },
+      "field-edge": {
+        "role": "neutral",
+        "displayName": "Field Edge"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page titles (h1)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings (h2) and dashboard stat values."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card and list item headings (h3)."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text, buttons, inputs, nav."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Badges, hints, timestamps, field help."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "color-change",
+        "value": "150ms ease",
+        "purpose": "Button fill changes on hover. Turned off when the device asks for reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action in a group.",
+      "html": "<button class=\"ds-btn-primary\">Register</button>",
+      "css": ".ds-btn-primary { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:0 16px; border-radius:6px; font-size:16px; font-weight:600; cursor:pointer; transition: background-color 150ms; border:none; background:var(--primary, #0b4fa8); color:var(--primary-foreground, #fff); } .ds-btn-primary:hover { background:color-mix(in srgb, var(--primary, #0b4fa8) 90%, transparent); } .ds-btn-primary:focus-visible { outline:none; box-shadow:0 0 0 4px var(--ring, #f59e0b); }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Every other action beside a primary one.",
+      "html": "<button class=\"ds-btn-secondary\">Race details</button>",
+      "css": ".ds-btn-secondary { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:0 16px; border-radius:6px; font-size:16px; font-weight:600; cursor:pointer; transition: background-color 150ms; border:2px solid var(--foreground, #0f172a); background:var(--background, #fff); color:var(--foreground, #0f172a); } .ds-btn-secondary:hover { background:var(--muted, #eef2f6); } .ds-btn-secondary:focus-visible { outline:none; box-shadow:0 0 0 4px var(--ring, #f59e0b); }"
+    },
+    {
+      "name": "Destructive Button",
+      "kind": "button",
+      "refersTo": "button-destructive",
+      "description": "Deletes or cancels something.",
+      "html": "<button class=\"ds-btn-danger\">Cancel registration</button>",
+      "css": ".ds-btn-danger { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:44px; padding:0 16px; border-radius:6px; font-size:16px; font-weight:600; cursor:pointer; transition: background-color 150ms; border:none; background:var(--destructive, #b42318); color:#fff; } .ds-btn-danger:hover { background:color-mix(in srgb, var(--destructive, #b42318) 90%, transparent); } .ds-btn-danger:focus-visible { outline:none; box-shadow:0 0 0 4px var(--ring, #f59e0b); }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "A labeled field with optional hint.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-label\">Name or bib</span><input class=\"ds-input\" placeholder=\"Search\"></label>",
+      "css": ".ds-field { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; display:block; } .ds-label { display:block; margin-bottom:4px; font-size:16px; font-weight:600; color:var(--foreground, #0f172a); } .ds-input { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; display:block; width:100%; min-height:44px; padding:0 12px; border:2px solid var(--input, #64748b); border-radius:6px; background:#fff; color:var(--foreground, #0f172a); font-size:16px; } .ds-input::placeholder { color:var(--muted-foreground, #475569); } .ds-input:focus-visible { outline:none; box-shadow:0 0 0 4px var(--ring, #f59e0b); }"
+    },
+    {
+      "name": "Status Badges",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Solid badges, one meaning per color.",
+      "html": "<span class=\"ds-badge ds-badge-ok\">Paid</span> <span class=\"ds-badge ds-badge-bad\">No waiver</span> <span class=\"ds-badge ds-badge-warn\">Check eligibility</span> <span class=\"ds-badge\">Bib 101</span>",
+      "css": ".ds-badge { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; display:inline-flex; align-items:center; padding:2px 8px; border-radius:4px; font-size:14px; font-weight:600; background:var(--muted, #eef2f6); color:var(--foreground, #0f172a); } .ds-badge-ok { background:var(--success, #067647); color:#fff; } .ds-badge-bad { background:var(--destructive, #b42318); color:#fff; } .ds-badge-warn { background:var(--warning, #f5b700); color:#000; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A bordered white sheet for one item.",
+      "html": "<div class=\"ds-card\"><h3 class=\"ds-card-title\">Race 4</h3><p class=\"ds-card-body\">A · Thu, Nov 5, 4:02 PM</p></div>",
+      "css": ".ds-card { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; border:2px solid var(--border, #cbd5e1); border-radius:8px; padding:16px; background:var(--card, #fff); color:var(--card-foreground, #0f172a); } .ds-card-title { margin:0 0 4px; font-size:18px; font-weight:700; } .ds-card-body { margin:0; font-size:16px; }"
+    },
+    {
+      "name": "Error Alert",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Full border plus a 10% tint of the signal color.",
+      "html": "<div class=\"ds-alert ds-alert-error\" role=\"alert\">Some fields need attention.</div>",
+      "css": ".ds-alert { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; padding:12px; border-radius:6px; border:2px solid var(--primary, #0b4fa8); background:color-mix(in srgb, var(--primary, #0b4fa8) 10%, transparent); color:var(--foreground, #0f172a); font-size:16px; } .ds-alert-error { border-color:var(--destructive, #b42318); background:color-mix(in srgb, var(--destructive, #b42318) 10%, transparent); }"
+    },
+    {
+      "name": "Header",
+      "kind": "nav",
+      "refersTo": "header",
+      "description": "The blue header band with the series name and nav.",
+      "html": "<header class=\"ds-header\"><a class=\"ds-brand\" href=\"#\">Conestee Crit Series</a><nav><a class=\"ds-nav\" href=\"#\">Schedule</a><a class=\"ds-nav\" href=\"#\">Standings</a><a class=\"ds-nav\" href=\"#\">Sign in</a></nav></header>",
+      "css": ".ds-header { font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; padding:8px 16px; background:var(--primary, #0b4fa8); color:#fff; } .ds-brand { display:flex; min-height:44px; align-items:center; font-size:18px; font-weight:700; color:#fff; text-decoration:none; } .ds-nav { display:inline-flex; min-height:44px; align-items:center; padding:0 8px; font-size:16px; font-weight:600; color:#fff; text-decoration:none; } .ds-nav:hover { text-decoration:underline; text-underline-offset:3px; } .ds-nav:focus-visible { outline:none; box-shadow:0 0 0 4px var(--ring, #f59e0b); } .ds-brand:focus-visible { outline:none; box-shadow:0 0 0 4px var(--ring, #f59e0b); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Race-Day Clipboard",
+    "overview": "\n**Creative North Star: \"The Race-Day Clipboard\"**\n\nThe app is a tool held in one hand at an outdoor desk, in direct sun, sometimes with gloves on. It reads like a well-kept clipboard: one sheet of white paper, dark ink, a blue header strip, and a few colored stamps that mean exactly one thing each. Nothing on the page is there for atmosphere. Every visual choice serves reading at a glance and tapping without missing.\n\nDensity is moderate and single-column. Pages sit in a narrow centered column on every screen size, so a phone, a tablet at the desk, and a laptop at home all show the same sheet. Depth comes from 2px borders and tinted fills, never from shadows. The type is the device's own system font, which keeps the first render fast on weak connections at the park (D-007).\n\nThe system rejects dark mode, decorative gradients, drop shadows, and web fonts. The single light theme is deliberate, because a dark screen washes out in sunlight.",
+    "keyCharacteristics": [
+      "One light theme, with text at 4.5:1 or better and input borders at 3:1.",
+      "A blue header band, white page, and dark navy ink.",
+      "Status shown with solid color badges: green for done, red for a problem, yellow for check this, gray for neutral.",
+      "2px borders everywhere a surface needs an edge.",
+      "Tap targets 44px or taller, and 56px for the main actions.",
+      "System fonts and bold weights instead of display faces."
+    ],
+    "rules": [
+      {
+        "name": "The One Meaning Rule",
+        "body": "Green means done, red means a problem, and yellow means check this. Never use a signal color for decoration or brand.",
+        "section": "colors"
+      },
+      {
+        "name": "The Sunlight Rule",
+        "body": "Every text color passes 4.5:1 on the background it sits on, and every field border passes 3:1. Check contrast before adding any new color.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tint Rule",
+        "body": "Alerts use their signal color at 10% opacity as the fill, with a full 2px border in the full-strength color. Text on a tint stays Ink Navy.",
+        "section": "colors"
+      },
+      {
+        "name": "The Bold Hierarchy Rule",
+        "body": "Headings are bold (700) and buttons and labels are semibold (600). Don't add light or thin weights.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tabular Numbers Rule",
+        "body": "Tables use tabular numerals, so places, points, bibs, and times line up in columns.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Eyebrow Rule",
+        "body": "Don't put a small uppercase label above a heading. Put the words in the heading itself, as in \"Next race: Race 4.\" The one uppercase small label in use is the home page sponsor strip heading, which is its own section heading.",
+        "section": "typography"
+      },
+      {
+        "name": "The One Column Rule",
+        "body": "No sidebars or multi-column page layouts. The narrow column reads the same on a phone at the desk and a laptop at home.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat Sheet Rule",
+        "body": "Don't add box shadows. To separate a surface, give it a 2px border or a tinted fill.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Full Border Rule",
+        "body": "Edges go all the way around. Don't use a thick colored stripe on one side of a card or alert.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do keep every tap target at least 44px tall, and use the 56px large button for the main action on a screen.",
+      "Do use Series Blue for one primary action per group, and secondary buttons for the rest.",
+      "Do separate surfaces with 2px Rule Line borders and 8px corners.",
+      "Do show state with the four badge tones, using the words riders and staff use, such as \"Paid,\" \"Waiver,\" and \"Checked in.\"",
+      "Do stack the action buttons full width on phones, rather than squeezing labels into a grid.",
+      "Do use drawn icons from Lucide (lucide-react), hidden from screen readers when the text already says the same thing."
+    ],
+    "donts": [
+      "Don't add a dark theme, drop shadows, gradients, or web fonts (D-007).",
+      "Don't use a thick colored stripe on one side of a card or alert.",
+      "Don't put white text on Caution Yellow.",
+      "Don't use Unicode characters such as ✓ or ! as icons.",
+      "Don't use body text smaller than 16px or secondary text lighter than Slate Note.",
+      "Don't put a small uppercase eyebrow label above a heading."
+    ]
+  }
+}
