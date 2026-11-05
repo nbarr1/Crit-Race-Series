@@ -91,7 +91,7 @@ async function Categories() {
           <li key={c.id}>
             <Card>
               <details>
-                <summary className="inline-flex min-h-11 cursor-pointer items-center text-xl font-bold">{c.name}</summary>
+                <summary className="flex min-h-11 cursor-pointer items-center text-xl font-bold">{c.name}</summary>
                 <AdminForm action={saveCategory} submitLabel={`Save ${c.name}`} className="pt-2">
                   <CategoryFields c={c} />
                 </AdminForm>

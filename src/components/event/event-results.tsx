@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CategoryResults } from "@/lib/results-data";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 
 const STATUS_LABEL = { finished: "", DNF: "DNF", DNS: "DNS", DQ: "DQ" } as const;
 
@@ -12,7 +13,7 @@ export function EventResults({ categories }: { categories: CategoryResults[] }) 
       {categories.map((cat) => (
         <div key={cat.categoryId} className="space-y-2">
           <h3 className="text-xl font-bold">{cat.categoryName}</h3>
-          <div className="overflow-x-auto">
+          <ScrollRegion label={`${cat.categoryName} results`}>
             <table className="w-full border-collapse text-left">
               <caption className="sr-only">{cat.categoryName} results</caption>
               <thead>
@@ -35,7 +36,7 @@ export function EventResults({ categories }: { categories: CategoryResults[] }) 
                 ))}
               </tbody>
             </table>
-          </div>
+          </ScrollRegion>
         </div>
       ))}
       <Link href="/standings" className="inline-flex min-h-11 items-center font-semibold text-primary underline">

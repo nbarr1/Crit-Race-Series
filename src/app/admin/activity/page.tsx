@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { changedFields, TABLE_LABELS } from "@/lib/admin/audit";
 import { formatDateTime } from "@/lib/time";
 import { PageLoading } from "@/components/page-loading";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 
 export const metadata: Metadata = { title: "Activity log" };
 
@@ -65,7 +66,7 @@ async function Activity({ searchParams }: Props) {
         </ul>
       </nav>
       {entries.length === 0 ? <p>Nothing recorded yet.</p> : null}
-      <div className="overflow-x-auto">
+      <ScrollRegion label="Recent changes">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">The 100 most recent changes{filter ? ` to ${TABLE_LABELS[filter].toLowerCase()}s` : ""}</caption>
           <thead>
@@ -89,7 +90,7 @@ async function Activity({ searchParams }: Props) {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollRegion>
     </div>
   );
 }

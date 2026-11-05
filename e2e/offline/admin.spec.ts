@@ -191,7 +191,9 @@ test("exports: registrations CSV for admins, emergency contacts for staff", asyn
     "select count(distinct rider_id)::int as riders from public.registrations where event_id = $1 and status in ('confirmed', 'pending_payment')",
     [ev.id],
   );
-  await expect(page.getByRole("row")).toHaveCount(riders + 1);
+  // Phone width (this project runs as a Pixel 7): one card per rider, with the table kept for wider screens and print.
+  await expect(page.getByRole("list", { name: /Emergency contacts for/ }).getByRole("listitem")).toHaveCount(riders);
+  await expect(page.getByRole("link", { name: /^Call contact:/ }).first()).toBeVisible();
   await expectAccessible(page);
 });
 

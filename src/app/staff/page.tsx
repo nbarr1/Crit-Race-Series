@@ -17,29 +17,29 @@ async function StaffHome() {
         Open race-day check-in
       </Link>
       <p className="text-sm text-muted-foreground">Check-in works offline once you&apos;ve opened it with a signal.</p>
-      <ul className="list-disc space-y-1 pl-5">
+      <ul className="list-disc pl-5">
         <li>
-          <Link href="/staff/results" className="font-semibold text-primary underline">Results: upload, check, and publish</Link>
+          <Link href="/staff/results" className="inline-flex min-h-11 items-center font-semibold text-primary underline">Results: upload, check, and publish</Link>
         </li>
         <li>
-          <Link href="/staff/announcements" className="font-semibold text-primary underline">Announcements: post and email riders</Link>
+          <Link href="/staff/announcements" className="inline-flex min-h-11 items-center font-semibold text-primary underline">Announcements: post and email riders</Link>
         </li>
         <li>
-          <Link href="/staff/sponsors" className="font-semibold text-primary underline">Sponsors</Link>
+          <Link href="/staff/sponsors" className="inline-flex min-h-11 items-center font-semibold text-primary underline">Sponsors</Link>
         </li>
         <li>
-          <Link href="/staff/events" className="font-semibold text-primary underline">Event information: course maps, GPX, weather notes</Link>
+          <Link href="/staff/events" className="inline-flex min-h-11 items-center font-semibold text-primary underline">Event information: course maps, GPX, weather notes</Link>
         </li>
       </ul>
       {profile.role === "admin" ? (
-        <ul className="list-disc space-y-1 pl-5">
+        <ul className="list-disc pl-5">
           <li>
-            <Link href="/admin" className="font-semibold text-primary underline">
+            <Link href="/admin" className="inline-flex min-h-11 items-center font-semibold text-primary underline">
               Admin: seasons, events, prices, settings, and staff
             </Link>
           </li>
           <li>
-            <Link href="/admin/waivers" className="font-semibold text-primary underline">
+            <Link href="/admin/waivers" className="inline-flex min-h-11 items-center font-semibold text-primary underline">
               Waivers: publish versions and export signatures
             </Link>
           </li>

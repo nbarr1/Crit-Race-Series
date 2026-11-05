@@ -16,11 +16,11 @@ function esc(s: string): string {
 }
 
 function layout(title: string, bodyHtml: string): string {
-  return `<!doctype html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;line-height:1.5;max-width:560px;margin:0 auto;padding:16px">
+  return `<!doctype html><html><body style="font-family:ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#0f172a;line-height:1.5;max-width:560px;margin:0 auto;padding:16px">
 <p style="font-weight:bold;color:#0b4fa8;margin:0 0 8px">${esc(SERIES_NAME)}</p>
-<h1 style="font-size:22px;margin:0 0 16px">${esc(title)}</h1>
+<h1 style="font-size:24px;margin:0 0 16px">${esc(title)}</h1>
 ${bodyHtml}
-<p style="color:#475569;font-size:13px;margin-top:24px">Times are Eastern Time. Reply to this email with questions.</p>
+<p style="color:#475569;font-size:14px;margin-top:24px">Times are Eastern Time. Reply to this email with questions.</p>
 </body></html>`;
 }
 
@@ -118,7 +118,7 @@ export function announcementEmail(firstName: string, title: string, bodyText: st
   return {
     subject,
     html: layout(title, `<p>Hi ${esc(firstName)},</p>${paragraphs}<p><a href="${esc(url)}">Read it on the series site</a></p>
-<p style="color:#475569;font-size:13px">You're getting this because you're registered for the Conestee Crit Series.</p>`),
+<p style="color:#475569;font-size:14px">You're getting this because you're registered for the Conestee Crit Series.</p>`),
     text: `Hi ${firstName},\n\n${bodyText}\n\nRead it on the series site: ${url}\n\nYou're getting this because you're registered for the Conestee Crit Series.\n`,
   };
 }

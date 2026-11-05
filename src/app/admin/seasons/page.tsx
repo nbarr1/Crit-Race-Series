@@ -83,7 +83,7 @@ async function Seasons() {
                 {s.name} {s.is_active ? <Badge tone="success">Active</Badge> : null}
               </h2>
               <p>
-                <Link href={`/admin/events?season=${s.id}`} className="font-semibold text-primary underline">
+                <Link href={`/admin/events?season=${s.id}`} className="inline-flex min-h-11 items-center font-semibold text-primary underline">
                   Events in {s.name}
                 </Link>
               </p>

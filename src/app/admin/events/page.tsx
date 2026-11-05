@@ -69,9 +69,9 @@ async function Events({ searchParams }: Props) {
       <ul className="space-y-3">
         {events.map((e) => (
           <li key={e.id}>
-            <Card className="space-y-1">
+            <Card className="relative space-y-1">
               <h3 className="text-xl font-bold">
-                <Link href={`/admin/events/${e.id}`} className="text-primary underline">
+                <Link href={`/admin/events/${e.id}`} className="text-primary underline after:absolute after:inset-0 after:rounded-lg after:content-['']">
                   {e.name}, {formatEventDate(e.event_date, "short")}
                 </Link>{" "}
                 <EventStatusBadge status={e.status} />

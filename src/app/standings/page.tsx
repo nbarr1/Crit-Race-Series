@@ -7,6 +7,7 @@ import { formatEventDate } from "@/lib/time";
 import { PageLoading } from "@/components/page-loading";
 import { SetupNotice } from "@/components/setup-notice";
 import { isSupabaseConfigured } from "@/lib/env";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 
 export const metadata: Metadata = { title: "Series standings" };
 
@@ -25,7 +26,7 @@ function CategoryTable({ cat }: { cat: CategoryStandings }) {
       <p className="text-sm text-muted-foreground">
         {cat.events.length} {cat.events.length === 1 ? "race" : "races"} scored.
       </p>
-      <div className="overflow-x-auto">
+      <ScrollRegion label={`${cat.categoryName} standings`}>
         <table className="w-full border-collapse text-left">
           <caption className="sr-only">{cat.categoryName} standings</caption>
           <thead>
@@ -64,7 +65,7 @@ function CategoryTable({ cat }: { cat: CategoryStandings }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollRegion>
     </section>
   );
 }
@@ -96,7 +97,7 @@ async function Standings() {
         <>
           <nav aria-label="Categories" className="flex flex-wrap gap-x-4 font-semibold">
             {data.categories.map((c) => (
-              <a key={c.categoryId} href={`#cat-${slug(c.categoryName)}`} className="inline-flex min-h-11 items-center text-primary underline">
+              <a key={c.categoryId} href={`#cat-${slug(c.categoryName)}`} className="inline-flex min-h-11 min-w-11 items-center text-primary underline">
                 {c.categoryName}
               </a>
             ))}

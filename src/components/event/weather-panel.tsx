@@ -4,6 +4,7 @@ import { arrowRotation, compassName, compassPoint, formatLocalClock, inForecastR
 import type { NwsAlert } from "@/lib/weather";
 import { formatDateTime, todayInDisplayTz } from "@/lib/time";
 import { Alert } from "@/components/ui/card";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 
 const r = (n: number | null, unit = "") => (n === null ? "—" : `${Math.round(n)}${unit}`);
 
@@ -136,7 +137,7 @@ export async function WeatherPanel({
             </div>
           </dl>
 
-          <div className="overflow-x-auto">
+          <ScrollRegion label="Hourly forecast">
             <table className="w-full border-collapse text-left text-sm sm:text-base">
               <caption className="sr-only">Hourly forecast during racing</caption>
               <thead>
@@ -173,7 +174,7 @@ export async function WeatherPanel({
                 ))}
               </tbody>
             </table>
-          </div>
+          </ScrollRegion>
           <p className="text-sm text-muted-foreground">
             Wind in mph; g means gusts. The arrow points the way the wind blows. Last updated {formatDateTime(forecast!.fetchedAt)}.{" "}
             <a href="https://open-meteo.com/" className="underline" rel="noopener noreferrer">

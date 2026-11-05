@@ -72,7 +72,7 @@ async function List() {
                   const c = counts.get(ec.id);
                   return (
                     <li key={ec.id} className="flex flex-wrap items-center gap-2">
-                      <Link href={`/staff/results/${ec.id}`} className="inline-flex min-h-11 items-center font-semibold text-primary underline">
+                      <Link href={`/staff/results/${ec.id}`} className="inline-flex min-h-11 min-w-11 items-center font-semibold text-primary underline">
                         {ec.categories.name}
                         <span className="sr-only">, {e.name}</span>
                       </Link>

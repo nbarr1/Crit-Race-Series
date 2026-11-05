@@ -117,7 +117,7 @@ async function Dashboard() {
           ))}
         </ul>
         <p>
-          <Link href={`/admin/events?season=${season.id}`} className="font-semibold text-primary underline">All events in {season.name}</Link>
+          <Link href={`/admin/events?season=${season.id}`} className="inline-flex min-h-11 items-center font-semibold text-primary underline">All events in {season.name}</Link>
         </p>
       </section>
     </div>

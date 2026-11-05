@@ -25,7 +25,7 @@ export function PassForm({ categories, priceCents }: { categories: { id: string;
               className="mt-1 size-6 shrink-0 accent-primary"
               onChange={(e) => setCount((n) => n + (e.target.checked ? 1 : -1))}
             />
-            <label htmlFor={`cat-${c.id}`}>
+            <label htmlFor={`cat-${c.id}`} className="flex-1 cursor-pointer">
               <span className="block text-lg font-bold">{c.name}</span>
               <span className="block text-sm">{c.description}</span>
             </label>

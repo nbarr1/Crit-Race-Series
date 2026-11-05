@@ -23,7 +23,7 @@ function PersonCard({ p, me }: { p: Person; me: string }) {
   return (
     <Card className="space-y-2">
       <p>
-        <span className="font-bold">{name}</span> {p.role !== "rider" ? <Badge tone={p.role === "admin" ? "success" : "neutral"}>{ROLE_LABELS[p.role]}</Badge> : null}
+        <span className="font-bold">{name}</span> {p.role !== "rider" ? <Badge>{ROLE_LABELS[p.role]}</Badge> : null}
         {p.email ? <span className="block text-sm">{p.email}</span> : null}
         {!p.has_account ? <span className="block text-sm text-muted-foreground">Hasn&apos;t signed in yet (walk-up rider).</span> : null}
       </p>
@@ -59,7 +59,7 @@ async function People({ searchParams }: Props) {
   return (
     <div className="space-y-6">
       <section aria-labelledby="team-h" className="space-y-3">
-        <h2 id="team-h" className="text-2xl font-bold">Staff and admins</h2>
+        <h2 id="team-h" className="text-2xl font-bold">Current staff and admins</h2>
         <ul className="space-y-3">
           {staff.map((p) => (
             <li key={p.profile_id}>

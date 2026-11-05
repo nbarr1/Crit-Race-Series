@@ -12,6 +12,7 @@ import { Alert, Badge } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ResultsUpload } from "@/components/staff/results-upload";
 import { setPublished } from "../actions";
+import { ScrollRegion } from "@/components/ui/scroll-region";
 
 export const metadata: Metadata = { title: "Upload results" };
 
@@ -59,7 +60,7 @@ async function Manage({ params }: Props) {
                 the race results under the name from the sheet, but don&apos;t count toward series standings.
               </Alert>
             ) : null}
-            <div className="overflow-x-auto">
+            <ScrollRegion label={`Saved results for ${ec.category.name}`}>
               <table className="w-full border-collapse text-left">
                 <caption className="sr-only">Saved results for {ec.category.name}</caption>
                 <thead>
@@ -84,7 +85,7 @@ async function Manage({ params }: Props) {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </ScrollRegion>
             <form action={setPublished}>
               <input type="hidden" name="event_category_id" value={ecId} />
               <input type="hidden" name="publish" value={published ? "false" : "true"} />

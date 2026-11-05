@@ -78,9 +78,16 @@ table {
   color: var(--primary-foreground);
 }
 
-:focus-visible {
-  outline: 3px solid var(--ring);
-  outline-offset: 2px;
+/*
+ * The 4px amber focus ring (DESIGN.md). It sits in the base layer so a
+ * component's own focus styles (the button ring, a heading that takes focus
+ * with outline-none) replace it instead of stacking a second ring on top.
+ */
+@layer base {
+  :focus-visible {
+    outline: 4px solid var(--ring);
+    outline-offset: 2px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
