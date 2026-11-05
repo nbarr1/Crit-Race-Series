@@ -10,6 +10,8 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     ".next-e2e/**",
+    // Vendored Impeccable skill (third-party, bundled scripts).
+    ".claude/**",
     "test-results/**",
     "playwright-report/**",
     "out/**",
